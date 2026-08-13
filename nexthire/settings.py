@@ -100,28 +100,28 @@ else:
     except Exception:
         _mysql_running = False
 
-if _mysql_running:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'nexthire_placement_db',
-            'USER': 'nexthire_root_user',
-            'PASSWORD': 'SecureDbPassword9821a_2026',
-            'HOST': '127.0.0.1',
-            'PORT': '3306',
-            'OPTIONS': {
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-                'charset': 'utf8mb4',
+    if _mysql_running:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.mysql',
+                'NAME': 'nexthire_placement_db',
+                'USER': 'nexthire_root_user',
+                'PASSWORD': 'SecureDbPassword9821a_2026',
+                'HOST': '127.0.0.1',
+                'PORT': '3306',
+                'OPTIONS': {
+                    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                    'charset': 'utf8mb4',
+                }
             }
         }
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
         }
-    }
 
 
 # Authentication Password validation
