@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire Analytics | Candidate Metrics & placement Readiness{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in text-left">
+    <!-- Header title -->
+    <div class="space-y-1.5 border-b border-slate-900 pb-4">
+        <h1 class="text-xl sm:text-2xl font-black font-display text-white flex items-center gap-2">
+            Predictive Analytics & Scores
+        </h1>
+        <p class="text-xs text-slate-400">Track academic progress profiles, review placement readiness metrics, and audit submission pipelines balances.</p>
+    </div>
+
+    <!-- Phase 5: Metrics Bento Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Profile Completion Score -->
+        <div class="bg-indigo-950/10 border border-indigo-900/40 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-400">Profile Completion</span>
+                <span class="text-lg"></span>
+            </div>
+            <div class="space-y-1">
+                <div class="text-3xl font-black font-display text-white">{{ profile_completion }}%</div>
+                <p class="text-[10px] text-slate-500 leading-normal">Percentage of filled metadata variables</p>
+            </div>
+            <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-indigo-500 h-full" style="width: {{ profile_completion }}%"></div>
+            </div>
+        </div>
+
+        <!-- Placement Readiness -->
+        <div class="bg-emerald-950/10 border border-emerald-900/40 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400">Readiness Score</span>
+                <span class="text-lg"></span>
+            </div>
+            <div class="space-y-1">
+                <div class="text-3xl font-black font-display text-white">{{ readiness }}/100</div>
+                <p class="text-[10px] text-slate-500 leading-normal">Dynamic corporate suitability index</p>
+            </div>
+            <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-emerald-500 h-full" style="width: {{ readiness }}%"></div>
+            </div>
+        </div>
+
+        <!-- Applications Total -->
+        <div class="bg-cyan-950/10 border border-cyan-900/40 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-400">Total Submissions</span>
+                <span class="text-lg"></span>
+            </div>
+            <div class="space-y-1">
+                <div class="text-3xl font-black font-display text-white">{{ total_apps }}</div>
+                <p class="text-[10px] text-slate-500 leading-normal">Active pipeline records</p>
+            </div>
+            <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-cyan-500 h-full" style="width: {% widthratio total_apps 10 100 %}%"></div>
+            </div>
+        </div>
+
+        <!-- CGPA Gap metric -->
+        <div class="bg-amber-950/10 border border-amber-900/40 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-500">CGPA Headroom</span>
+                <span class="text-lg"></span>
+            </div>
+            <div class="space-y-1">
+                <div class="text-3xl font-black font-display text-white">{{ trainee.cgpa }}/10.0</div>
+                <p class="text-[10px] text-slate-500 leading-normal">Headroom Gap remaining: -{{ gpa_gap }}</p>
+            </div>
+            <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-amber-500 h-full" style="width: {% widthratio trainee.cgpa 10 100 %}%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Charts Rows -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Left: Interview Performance Trend (SVG render) -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 space-y-6">
+            <div>
+                <h3 class="text-sm font-black font-display text-white">Interview Performance Trend</h3>
+                <p class="text-[10px] text-slate-500">Rating scores mapped across corporate interviews</p>
+            </div>
+
+            <!-- SVG Bar Chart Grid -->
+            <div class="relative h-48 w-full border border-slate-900/60 bg-slate-950/40 rounded-2xl p-4 flex flex-col justify-between">
+                {% if completed_interviews %}
+                    <svg class="w-full h-full" viewBox="0 0 400 135">
+                        <defs>
+                            <linearGradient id="bar-grad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#818cf8"/>
+                                <stop offset="100%" stop-color="#4f46e5"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- Grid Lines -->
+                        <line x1="10" y1="25" x2="390" y2="25" stroke="#1e293b" stroke-dasharray="4" stroke-width="1"/>
+                        <line x1="10" y1="55" x2="390" y2="55" stroke="#1e293b" stroke-dasharray="4" stroke-width="1"/>
+                        <line x1="10" y1="85" x2="390" y2="85" stroke="#1e293b" stroke-dasharray="4" stroke-width="1"/>
+                        <line x1="10" y1="105" x2="390" y2="105" stroke="#334155" stroke-width="1.5"/>
+
+                        <!-- Dynamic Columns -->
+                        {% for interview in completed_interviews|slice:":4" %}
+                            {% if interview.rating_score == 5 %}
+                                <rect x="{% widthratio forloop.counter 1 80 %}" y="25" width="40" height="80" rx="5" fill="url(#bar-grad)"/>
+                                <text x="{% widthratio forloop.counter 1 80 %}" dx="20" dy="-8" y="25" text-anchor="middle" class="text-[9px] font-mono fill-indigo-400 font-bold">5.0/5</text>
+                            {% elif interview.rating_score == 4 %}
+                                <rect x="{% widthratio forloop.counter 1 80 %}" y="41" width="40" height="64" rx="5" fill="url(#bar-grad)"/>
+                                <text x="{% widthratio forloop.counter 1 80 %}" dx="20" dy="-8" y="41" text-anchor="middle" class="text-[9px] font-mono fill-indigo-400 font-bold">4.0/5</text>
+                            {% elif interview.rating_score == 3 %}
+                                <rect x="{% widthratio forloop.counter 1 80 %}" y="57" width="40" height="48" rx="5" fill="url(#bar-grad)"/>
+                                <text x="{% widthratio forloop.counter 1 80 %}" dx="20" dy="-8" y="57" text-anchor="middle" class="text-[9px] font-mono fill-indigo-400 font-bold">3.0/5</text>
+                            {% elif interview.rating_score == 2 %}
+                                <rect x="{% widthratio forloop.counter 1 80 %}" y="73" width="40" height="32" rx="5" fill="url(#bar-grad)"/>
+                                <text x="{% widthratio forloop.counter 1 80 %}" dx="20" dy="-8" y="73" text-anchor="middle" class="text-[9px] font-mono fill-indigo-400 font-bold">2.0/5</text>
+                            {% else %}
+                                <rect x="{% widthratio forloop.counter 1 80 %}" y="89" width="40" height="16" rx="5" fill="url(#bar-grad)"/>
+                                <text x="{% widthratio forloop.counter 1 80 %}" dx="20" dy="-8" y="89" text-anchor="middle" class="text-[9px] font-mono fill-indigo-400 font-bold">1.0/5</text>
+                            {% endif %}
+                            
+                            <!-- Subtitle label -->
+                            <text x="{% widthratio forloop.counter 1 80 %}" dx="20" y="120" text-anchor="middle" class="text-[8px] font-sans fill-slate-400 font-semibold">{{ interview.title|truncatechars:12 }}</text>
+                        {% endfor %}
+                    </svg>
+                {% else %}
+                    <!-- Screenshot-matched Default N/A View -->
+                    <div class="absolute inset-0 flex flex-col justify-between p-4">
+                        <svg class="absolute inset-0 w-full h-[125px] px-4" viewBox="0 0 400 100" preserveAspectRatio="none">
+                            <!-- Grid Lines -->
+                            <line x1="0" y1="20" x2="400" y2="20" stroke="#1e293b" stroke-dasharray="4" stroke-width="1"/>
+                            <line x1="0" y1="50" x2="400" y2="50" stroke="#1e293b" stroke-dasharray="4" stroke-width="1"/>
+                            <line x1="0" y1="80" x2="400" y2="80" stroke="#1e293b" stroke-dasharray="4" stroke-width="1"/>
+                            
+                            <!-- Node dot at the bottom -->
+                            <circle cx="100" cy="85" r="4.5" fill="#6366f1" stroke="#0f172a" stroke-width="2"/>
+                        </svg>
+                        
+                        <!-- Overlay Labels -->
+                        <div class="absolute bottom-4 left-4 text-left space-y-0.5">
+                            <span class="block text-[10px] font-bold text-slate-400">"N/A"</span>
+                            <span class="block text-[9px] font-mono text-indigo-400">0.0/5</span>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column: Submission Status Balances (Pie Chart Layout) -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 space-y-6">
+            <div>
+                <h3 class="text-sm font-black font-display text-white">Submission Status Balances</h3>
+                <p class="text-[10px] text-slate-500">Submissions mapped across current evaluation steps</p>
+            </div>
+
+            <div class="flex items-center justify-between gap-6 bg-slate-950/20 border border-slate-900/40 p-5 rounded-2xl">
+                <!-- Pie Chart circle -->
+                <div class="flex items-center justify-center shrink-0 w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-slate-900 shadow-xl" style="{{ conic_style }}">
+                    <!-- Inner cut-out to make it a ring/donut if wanted, else standard pie -->
+                </div>
+
+                <!-- Legend status balances (aligned to the right as in screenshot) -->
+                <div class="flex-grow space-y-2 text-xs">
+                    <!-- Under Review -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span>
+                            <span>Under Review</span>
+                        </div>
+                        <span class="font-mono text-[10px] text-slate-350 font-bold bg-slate-900/70 border border-slate-800 px-2.0 py-0.5 rounded-md min-w-[20px] text-center">{{ under_review_count }}</span>
+                    </div>
+
+                    <!-- Shortlisted -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+                            <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 shrink-0"></span>
+                            <span>Shortlisted</span>
+                        </div>
+                        <span class="font-mono text-[10px] text-slate-350 font-bold bg-slate-900/70 border border-slate-800 px-2.0 py-0.5 rounded-md min-w-[20px] text-center">{{ shortlisted_count }}</span>
+                    </div>
+
+                    <!-- Interviews -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+                            <span>Interviews</span>
+                        </div>
+                        <span class="font-mono text-[10px] text-slate-350 font-bold bg-slate-900/70 border border-slate-800 px-2.0 py-0.5 rounded-md min-w-[20px] text-center">{{ interviews_count }}</span>
+                    </div>
+
+                    <!-- Offers -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                            <span>Offers</span>
+                        </div>
+                        <span class="font-mono text-[10px] text-slate-350 font-bold bg-slate-900/70 border border-slate-800 px-2.0 py-0.5 rounded-md min-w-[20px] text-center">{{ offers_count }}</span>
+                    </div>
+
+                    <!-- Rejected -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+                            <span class="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"></span>
+                            <span>Rejected</span>
+                        </div>
+                        <span class="font-mono text-[10px] text-slate-350 font-bold bg-slate-900/70 border border-slate-800 px-2.0 py-0.5 rounded-md min-w-[20px] text-center">{{ rejected_count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

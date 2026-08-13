@@ -1,0 +1,233 @@
+<!-- templates/recruiters/applicants_list.html -->
+{% extends "base.html" %}
+
+{% block title %}NextHire Candidates Desk | Screening Bench{% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in text-left">
+    
+    <!-- Title header and filters desk -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-900 pb-5">
+        <div class="space-y-1">
+            <h1 class="text-xl sm:text-2xl font-black font-display text-white">
+                Candidates Screening Bench
+            </h1>
+            <p class="text-xs text-slate-400">Review portfolio submissions, compare skills match scores, and guide applicants through recruitment workflow lanes.</p>
+        </div>
+
+        <!-- Filter Selector -->
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold text-slate-400 font-mono">Filter by Vacancy:</span>
+            <div class="relative">
+                <select 
+                    onchange="location = this.value;"
+                    class="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                >
+                    <option value="{% url 'recruiters:applicants' %}">Show All Positions ({{ jobs.count }})</option>
+                    {% for job in jobs %}
+                        <option value="{% url 'recruiters:view_applicants_by_job' job.id %}" {% if selected_job and selected_job.id == job.id %}selected{% endif %}>
+                            {{ job.title }} ({{ job.applications.count }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Screen metrics indicator banner for active job -->
+    {% if selected_job %}
+        <div class="bg-indigo-500/10 dark:bg-indigo-950/10 border border-indigo-200 dark:border-indigo-900/30 p-4.5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1 text-sm font-sans">
+                <p class="text-xs font-mono font-bold text-indigo-700 dark:text-indigo-400 uppercase">Filters configured:</p>
+                <h3 class="font-bold text-slate-900 dark:text-white">{{ selected_job.title }}</h3>
+                <p class="text-xs text-slate-650 dark:text-slate-400">Eligibility baseline standard: <span class="text-slate-800 dark:text-slate-300 font-bold">{{ selected_job.min_cgpa_required }}+ CGPA</span></p>
+            </div>
+            
+            <div class="flex items-center gap-4 text-xs font-mono">
+                <div class="text-center bg-slate-200/50 dark:bg-slate-950/50 p-2.5 rounded-xl border border-slate-300 dark:border-slate-800 min-w-[100px]">
+                    <span class="block text-slate-600 dark:text-slate-500 text-[10px]">TOTAL APPS</span>
+                    <span class="text-base font-black text-slate-900 dark:text-white px-1">{{ applicants.count }}</span>
+                </div>
+            </div>
+        </div>
+    {% elif status_filter == 'selections' %}
+        <div class="bg-emerald-500/10 dark:bg-emerald-950/10 border border-emerald-200 dark:border-emerald-900/30 p-4.5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1 text-sm font-sans">
+                <p class="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400 uppercase">Filters configured:</p>
+                <h3 class="font-bold text-slate-900 dark:text-white">Selections (Offer Extended / Accepted)</h3>
+                <p class="text-xs text-slate-650 dark:text-slate-400">Showing only candidates with released or accepted placement offers.</p>
+            </div>
+            
+            <div class="flex items-center gap-4 text-xs font-mono">
+                <div class="text-center bg-slate-200/50 dark:bg-slate-950/50 p-2.5 rounded-xl border border-slate-300 dark:border-slate-800 min-w-[100px]">
+                    <span class="block text-slate-600 dark:text-slate-500 text-[10px]">TOTAL SELECTIONS</span>
+                    <span class="text-base font-black text-slate-900 dark:text-white px-1">{{ applicants.count }}</span>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Candidates Table Stage -->
+    <div class="bg-slate-900/10 border border-slate-900 rounded-3xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="border-b border-slate-900 text-slate-500 font-mono tracking-wider uppercase text-[10px] bg-slate-950/40">
+                        <th class="p-4 font-bold whitespace-nowrap">Student Candidate</th>
+                        <th class="p-4 font-bold whitespace-nowrap">Position Applied</th>
+                        <th class="p-4 font-bold whitespace-nowrap">Skills Tags</th>
+                        <th class="p-4 font-bold text-center whitespace-nowrap">Auto Rank</th>
+                        <th class="p-4 font-bold whitespace-nowrap">Workflow Status</th>
+                        <th class="p-4 font-bold text-right whitespace-nowrap">Actions Panel</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-900/60">
+                    {% if applicants %}
+                        {% for app in applicants %}
+                        <tr class="hover:bg-slate-900/15 transition-colors">
+                            
+                            <!-- Col 1: Student -->
+                            <td class="p-4">
+                                <div class="flex items-center gap-3">
+                                    {% if app.trainee.profile_image %}
+                                        <img src="{{ app.trainee.profile_image.url }}" alt="Profile avatar" class="w-9 h-9 rounded-full object-cover border border-slate-800 shrink-0">
+                                    {% else %}
+                                        <div class="w-9 h-9 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-bold text-indigo-400 shrink-0 uppercase">
+                                            {{ app.trainee.user.username|slice:":2" }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="space-y-0.5 min-w-0">
+                                        <span class="font-bold text-slate-900 dark:text-slate-100 block truncate">{{ app.trainee.user.get_full_name|default:app.trainee.user.username }}</span>
+                                        <span class="text-[10px] font-mono text-slate-500 dark:text-slate-400 block">Batch Code: {{ app.trainee.batch_code }}</span>
+                                        <span class="text-[10px] text-slate-650 dark:text-slate-550 block">GP Score: <strong class="text-indigo-650 dark:text-indigo-400">{{ app.trainee.cgpa }}</strong></span>
+                                        
+                                        <!-- Recommendations check -->
+                                        {% for rec in app.trainee.placement_recommendations.all %}
+                                            {% if rec.job_id == app.job_id %}
+                                                <div class="mt-1.5 p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded text-[10px] leading-tight font-sans">
+                                                    <span class="font-bold">★ Recommended by {{ rec.recommended_by.get_full_name|default:rec.recommended_by.email }} (Officer):</span> {{ rec.comments|default:"Highly recommended" }}
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Col 2: Position -->
+                            <td class="p-4 font-sans">
+                                <div class="space-y-0.5">
+                                    <span class="font-semibold text-slate-800 dark:text-slate-200 block">{{ app.job.title }}</span>
+                                    <span class="text-[10px] font-mono text-slate-550 dark:text-slate-500 block">Posted date: {{ app.applied_at|date:"M d, Y" }}</span>
+                                </div>
+                            </td>
+
+                            <!-- Col 3: Skills / Resume links -->
+                            <td class="p-4">
+                                <div class="space-y-2.5 max-w-[240px]">
+                                    <!-- Skills array tags -->
+                                    <div class="flex flex-wrap gap-1">
+                                        {% if app.trainee.skills %}
+                                            {% for skill in app.trainee.skills %}
+                                                <span class="text-[9px] font-mono bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-850 px-1.5 py-0.5 rounded text-slate-700 dark:text-slate-400">{{ skill }}</span>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="text-[9.5px] italic text-slate-600 dark:text-slate-500 font-mono">No skills configured</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Resume document link button -->
+                                    <div>
+                                        {% if app.resume or app.trainee.resume_file %}
+                                            <a href="{% url 'applications:application_resume_preview' app.id %}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-350 bg-emerald-500/5 px-2 py-1 rounded-lg border border-emerald-500/10 font-bold hover:underline transition-colors">
+                                                Preview Candidate Resume
+                                            </a>
+                                        {% else %}
+                                            <span class="text-[10px] text-red-400/80 bg-red-500/5 px-2 py-0.5 rounded border border-red-500/10 font-mono">✗ Resume reference missing</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Col 4: Auto ranks score -->
+                            <td class="p-4 text-center font-mono text-sm">
+                                <span class="font-black px-2.5 py-1 rounded-xl border {% if app.screener_score >= 80 %}text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/5 border-emerald-500/20 dark:border-emerald-500/10
+                                    {% elif app.screener_score >= 60 %}text-indigo-700 dark:text-indigo-400 bg-indigo-500/10 dark:bg-indigo-500/5 border-indigo-500/20 dark:border-indigo-500/10
+                                    {% else %}text-slate-700 dark:text-slate-400 bg-slate-500/10 dark:bg-slate-500/5 border-slate-200 dark:border-slate-800{% endif %}">
+                                    {{ app.screener_score }}%
+                                </span>
+                            </td>
+
+                            <!-- Col 5: Workflow status badges -->
+                            <td class="p-4 font-mono font-bold text-[10px] whitespace-nowrap">
+                                <span class="px-2 py-1 rounded border uppercase
+                                    {% if app.status == 'PENDING' %}bg-blue-500/10 border-blue-500/20 dark:border-blue-500/25 text-blue-700 dark:text-blue-400
+                                    {% elif app.status == 'SHORTLISTED' %}bg-cyan-500/10 border-cyan-500/20 dark:border-cyan-500/25 text-cyan-700 dark:text-cyan-400
+                                    {% elif app.status == 'INTERVIEWING' %}bg-amber-500/10 border-amber-500/20 dark:border-amber-500/25 text-amber-700 dark:text-amber-400
+                                    {% elif app.status == 'OFFER_EXTENDED' or app.status == 'OFFER_ACCEPTED' %}bg-emerald-500/10 border-emerald-500/20 dark:border-emerald-500/25 text-emerald-700 dark:text-emerald-400
+                                    {% else %}bg-rose-500/10 border-rose-500/20 dark:border-rose-500/25 text-rose-700 dark:text-rose-400{% endif %}">
+                                    {{ app.get_status_display }}
+                                </span>
+                            </td>
+
+                            <!-- Col 6: Actions Panel -->
+                            <td class="p-4 text-right whitespace-nowrap">
+                                <div class="flex items-center justify-end gap-1.5 flex-nowrap whitespace-nowrap">
+                                    
+                                    {% if app.status == 'PENDING' %}
+                                        <!-- Shortlist action -->
+                                        <a href="{% url 'recruiters:update_status' app.id 'SHORTLISTED' %}" class="px-2.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-[10.5px] transition-colors">
+                                            Shortlist candidate
+                                        </a>
+                                        <!-- Reject action -->
+                                        <a href="{% url 'recruiters:update_status' app.id 'REJECTED' %}" class="px-2.5 py-1.5 rounded-lg border border-red-300 dark:border-red-900 hover:bg-red-500/10 dark:hover:bg-red-950/20 text-red-700 dark:text-red-400 text-[10.5px]" onclick="return confirm('Confirm rejecting this application?')">
+                                            Reject
+                                        </a>
+                                    {% elif app.status == 'SHORTLISTED' %}
+                                        <!-- Schedule Interview -->
+                                        <a href="{% url 'recruiters:schedule_interview' app.id %}" class="px-2.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10.5px] transition-colors">
+                                            Schedule Interview
+                                        </a>
+                                        <!-- Release Selection Offer -->
+                                        <a href="{% url 'applications:offer_generate' app.id %}" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10.5px]">
+                                            Extend Offer
+                                        </a>
+                                        <!-- Reject -->
+                                        <a href="{% url 'recruiters:update_status' app.id 'REJECTED' %}" class="px-2.5 py-1.5 rounded-lg border border-red-900 hover:bg-red-950/20 text-red-400 text-[10.5px]" onclick="return confirm('Confirm rejecting after initial shortlist?')">
+                                            Reject
+                                        </a>
+                                    {% elif app.status == 'INTERVIEWING' %}
+                                        <!-- Offer selection release -->
+                                        <a href="{% url 'applications:offer_generate' app.id %}" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10.5px]">
+                                            Release Placement Offer
+                                        </a>
+                                        <!-- Re-Schedule Interview -->
+                                        <a href="{% url 'recruiters:schedule_interview' app.id %}" class="px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-350 text-[10.5px]">
+                                            Re-Schedule Rd
+                                        </a>
+                                        <!-- Reject -->
+                                        <a href="{% url 'recruiters:update_status' app.id 'REJECTED' %}" class="px-2.5 py-1.5 rounded-lg border border-slate-800 text-red-400 text-[10.5px]" onclick="return confirm('Confirm candidate selection rejection?')">
+                                            Reject
+                                        </a>
+                                    {% else %}
+                                        <!-- Offer released or Rejected -->
+                                        <span class="text-[10px] font-mono text-slate-500 uppercase py-1 border border-transparent">Workflow Terminated</span>
+                                    {% endif %}
+                                    
+                                </div>
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="p-12 text-center text-slate-500 font-mono">
+                                No candidate applicant registers found matching current vacancy indices.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

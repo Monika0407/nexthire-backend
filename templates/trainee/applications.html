@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Application Tracking | Career Pipeline{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in">
+    <!-- Header banner -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-900/40 p-6 rounded-3xl border border-slate-900">
+        <div class="space-y-1">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-indigo-400">Pipeline Tracking</span>
+            <h1 class="text-2xl sm:text-3xl font-black font-display tracking-tight text-white">
+                My Job Applications
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400">
+                Monitor status histories, complete interviews schedules, and accept extended career placement selection letters.
+            </p>
+        </div>
+        <div class="bg-indigo-600/10 border border-indigo-500/20 px-4 py-3 rounded-2xl shrink-0">
+            <span class="block text-[10px] font-mono uppercase text-slate-400">Active Pipelines</span>
+            <span class="text-2xl font-black font-display text-indigo-400">{{ active_apps_count }} Active</span>
+        </div>
+    </div>
+
+    <!-- Search & Filter bar -->
+    <div class="bg-slate-900/10 border border-slate-900 p-4 rounded-2xl flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <form method="GET" action="" class="w-full flex flex-col sm:flex-row gap-3">
+            <div class="relative flex-grow">
+                <input type="text" name="q" value="{{ q }}" placeholder="Search by Job Role or Company name..." 
+                       class="w-full bg-slate-950 border border-slate-900 focus:border-indigo-500 text-slate-200 text-xs sm:text-sm rounded-xl py-2.5 pl-4 pr-10 focus:outline-none transition-all">
+                {% if q %}
+                    <a href="?status={{ status_filter }}" class="absolute right-3 top-2.5 text-slate-500 hover:text-white font-mono text-xs">&times; Clear</a>
+                {% endif %}
+            </div>
+
+            <div class="w-full sm:w-48">
+                <select name="status" onchange="this.form.submit()" 
+                        class="w-full bg-slate-950 border border-slate-900 text-slate-300 text-xs sm:text-sm rounded-xl py-2.5 px-3 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                    <option value="">All Statuses Filters</option>
+                    {% for key, val in status_choices %}
+                        <option value="{{ key }}" {% if status_filter == key %}selected{% endif %}>{{ val }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl cursor-pointer transition-all">
+                Fetch Records
+            </button>
+        </form>
+    </div>
+
+    <!-- Applications Feed List -->
+    <div class="space-y-6">
+        {% if applications %}
+            {% for app in applications %}
+            <div class="bg-slate-950 border {% if app.status == 'OFFER_ACCEPTED' %}border-emerald-800 bg-emerald-950/5{% elif app.status == 'REJECTED' %}border-rose-950 bg-rose-950/2{% else %}border-slate-900{% endif %} hover:border-slate-800 rounded-3xl p-6 transition-all hover:bg-slate-900/10 space-y-6">
+                <!-- Top details segment -->
+                <div class="flex flex-col md:flex-row justify-between gap-4 border-b border-slate-900/80 pb-5">
+                    <div class="space-y-1.5">
+                        <span class="text-[10px] font-mono text-indigo-400 bg-indigo-500/5 border border-indigo-500/10 px-2 py-0.5 rounded font-bold uppercase">{{ app.job.get_job_type_display }}</span>
+                        <h2 class="text-lg sm:text-xl font-bold font-sans text-white hover:text-indigo-400 transition-colors">{{ app.job.title }}</h2>
+                        <p class="text-xs sm:text-sm font-semibold text-slate-450">{{ app.job.recruiter.company_name }} | <span class="font-mono text-slate-500 text-xs">{{ app.job.location }}</span></p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3 self-start md:self-center">
+                        <span class="text-xs font-mono text-slate-500">Applied: <strong>{{ app.applied_at|date:"M d, Y" }}</strong></span>
+                        {% if app.status == 'PENDING' %}
+                            <span class="px-3 py-1 text-xs font-bold font-mono text-blue-400 bg-blue-500/5 rounded-full border border-blue-500/10 uppercase">{{ app.get_status_display }}</span>
+                        {% elif app.status == 'SHORTLISTED' %}
+                            <span class="px-3 py-1 text-xs font-bold font-mono text-indigo-400 bg-indigo-500/5 rounded-full border border-indigo-500/10 uppercase">{{ app.get_status_display }}</span>
+                        {% elif app.status == 'TESTING' %}
+                            <span class="px-3 py-1 text-xs font-bold font-mono text-cyan-400 bg-cyan-500/5 rounded-full border border-cyan-500/10 uppercase">{{ app.get_status_display }}</span>
+                        {% elif app.status == 'INTERVIEWING' %}
+                            <span class="px-3 py-1 text-xs font-bold font-mono text-amber-400 bg-amber-500/5 rounded-full border border-amber-500/10 uppercase">{{ app.get_status_display }}</span>
+                        {% elif app.status == 'OFFER_EXTENDED' %}
+                            <span class="px-3 py-1 text-xs font-bold font-mono text-emerald-450 bg-emerald-500/10 rounded-full border border-emerald-500/20 uppercase shrink-0 animate-pulse">{{ app.get_status_display }}</span>
+                        {% elif app.status == 'OFFER_ACCEPTED' %}
+                            <span class="px-3 py-1 text-xs font-bold font-mono text-emerald-400 bg-emerald-500/10 rounded-full border border-emerald-500/30 uppercase shrink-0">PLACEMENT COMPLETED</span>
+                        {% elif app.status == 'REJECTED' %}
+                            <span class="px-3 py-1 text-xs font-bold font-mono text-rose-450 bg-rose-550/5 rounded-full border border-rose-550/10 uppercase shrink-0">NOT SELECTED</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Phase 3 Progress Timeline Graphics -->
+                <div class="space-y-3">
+                    <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold block">Application Tracking Benchmark timeline:</span>
+                    
+                    <div class="relative">
+                        <!-- Connecting Line background -->
+                        <div class="absolute top-3.5 left-0 w-full h-[3px] bg-slate-200 dark:bg-slate-900 -translate-y-1/2 z-0 hidden sm:block"></div>
+                        <!-- Completed connecting line indicator -->
+                        <div class="absolute top-3.5 left-0 h-[3px] bg-indigo-500 -translate-y-1/2 z-0 hidden sm:block transition-all"
+                             style="width: {% if app.status == 'PENDING' %}10%{% elif app.status == 'SHORTLISTED' %}30%{% elif app.status == 'TESTING' %}50%{% elif app.status == 'INTERVIEWING' %}70%{% elif app.status == 'OFFER_EXTENDED' %}90%{% elif app.status == 'OFFER_ACCEPTED' %}100%{% else %}0%{% endif %};"></div>
+
+                        <div class="relative z-10 grid grid-cols-2 sm:grid-cols-5 gap-4">
+                            <!-- Step 1: Submited -->
+                            <div class="text-center bg-slate-950/80 p-3 sm:bg-transparent sm:p-0 rounded-xl border border-slate-900/60 sm:border-0">
+                                <div class="w-7 h-7 mx-auto rounded-full flex items-center justify-center font-mono text-xs font-bold border-2 transition-all
+                                     bg-indigo-950 border-indigo-500 text-indigo-400 shadow-[0_0_12px_rgba(99,102,241,0.2)]">
+                                     1
+                                </div>
+                                <span class="block text-xs font-bold text-slate-800 dark:text-slate-200 mt-2 font-display">Applied</span>
+                                <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-mono font-semibold">Completed</span>
+                            </div>
+
+                            <!-- Step 2: Shortlist -->
+                            <div class="text-center bg-slate-950/80 p-3 sm:bg-transparent sm:p-0 rounded-xl border border-slate-900/60 sm:border-0">
+                                <div class="w-7 h-7 mx-auto rounded-full flex items-center justify-center font-mono text-xs font-bold border-2 transition-all
+                                     {% if app.status != 'PENDING' %}
+                                        bg-indigo-950 border-indigo-500 text-indigo-400
+                                     {% else %}
+                                        bg-slate-100 dark:bg-slate-950 border-slate-300 dark:border-slate-900 text-slate-400 dark:text-slate-600
+                                     {% endif %}">
+                                     2
+                                </div>
+                                <span class="block text-xs font-bold mt-2 font-display {% if app.status != 'PENDING' %}text-slate-800 dark:text-slate-200{% else %}text-slate-400 dark:text-slate-600{% endif %}">Shortlisted</span>
+                                <span class="text-[10px] font-mono {% if app.status != 'PENDING' %}text-indigo-600 dark:text-indigo-400 font-semibold{% else %}text-slate-400 dark:text-slate-500{% endif %}">
+                                     {% if app.status != 'PENDING' %}Completed{% else %}Pending{% endif %}
+                                </span>
+                            </div>
+
+                            <!-- Step 3: Assessment/Testing -->
+                            <div class="text-center bg-slate-950/80 p-3 sm:bg-transparent sm:p-0 rounded-xl border border-slate-900/60 sm:border-0">
+                                <div class="w-7 h-7 mx-auto rounded-full flex items-center justify-center font-mono text-xs font-bold border-2 transition-all
+                                     {% if app.status == 'TESTING' or app.status == 'INTERVIEWING' or app.status == 'OFFER_EXTENDED' or app.status == 'OFFER_ACCEPTED' %}
+                                        bg-indigo-950 border-indigo-500 text-indigo-400
+                                     {% else %}
+                                        bg-slate-100 dark:bg-slate-950 border-slate-300 dark:border-slate-900 text-slate-400 dark:text-slate-600
+                                     {% endif %}">
+                                     3
+                                </div>
+                                <span class="block text-xs font-bold mt-2 font-display {% if app.status == 'TESTING' or app.status == 'INTERVIEWING' or app.status == 'OFFER_EXTENDED' or app.status == 'OFFER_ACCEPTED' %}text-slate-800 dark:text-slate-200{% else %}text-slate-400 dark:text-slate-600{% endif %}">Assessment</span>
+                                <span class="text-[10px] font-mono {% if app.status == 'TESTING' or app.status == 'INTERVIEWING' or app.status == 'OFFER_EXTENDED' or app.status == 'OFFER_ACCEPTED' %}text-indigo-600 dark:text-indigo-400 font-semibold{% else %}text-slate-400 dark:text-slate-500{% endif %}">
+                                     {% if app.status == 'TESTING' or app.status == 'INTERVIEWING' or app.status == 'OFFER_EXTENDED' or app.status == 'OFFER_ACCEPTED' %}Completed{% else %}Pending{% endif %}
+                                </span>
+                            </div>
+
+                            <!-- Step 4: Interviewing -->
+                            <div class="text-center bg-slate-950/80 p-3 sm:bg-transparent sm:p-0 rounded-xl border border-slate-900/60 sm:border-0">
+                                <div class="w-7 h-7 mx-auto rounded-full flex items-center justify-center font-mono text-xs font-bold border-2 transition-all
+                                     {% if app.status == 'INTERVIEWING' or app.status == 'OFFER_EXTENDED' or app.status == 'OFFER_ACCEPTED' %}
+                                        bg-indigo-950 border-indigo-500 text-indigo-400
+                                     {% else %}
+                                        bg-slate-100 dark:bg-slate-950 border-slate-300 dark:border-slate-900 text-slate-400 dark:text-slate-600
+                                     {% endif %}">
+                                     4
+                                </div>
+                                <span class="block text-xs font-bold mt-2 font-display {% if app.status == 'INTERVIEWING' or app.status == 'OFFER_EXTENDED' or app.status == 'OFFER_ACCEPTED' %}text-slate-800 dark:text-slate-200{% else %}text-slate-400 dark:text-slate-600{% endif %}">Interviewing</span>
+                                <span class="text-[10px] font-mono {% if app.status == 'INTERVIEWING' or app.status == 'OFFER_EXTENDED' or app.status == 'OFFER_ACCEPTED' %}text-indigo-600 dark:text-indigo-400 font-semibold{% else %}text-slate-400 dark:text-slate-500{% endif %}">
+                                     {% if app.status == 'INTERVIEWING' or app.status == 'OFFER_EXTENDED' or app.status == 'OFFER_ACCEPTED' %}Completed{% else %}Pending{% endif %}
+                                </span>
+                            </div>
+
+                            <!-- Step 5: Placement Offer -->
+                            <div class="text-center bg-slate-950/80 p-3 sm:bg-transparent sm:p-0 rounded-xl border border-slate-900/60 sm:border-0">
+                                <div class="w-7 h-7 mx-auto rounded-full flex items-center justify-center font-mono text-xs font-bold border-2 transition-all
+                                     {% if app.status == 'OFFER_ACCEPTED' %}
+                                        bg-emerald-950 border-emerald-500 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.3)]
+                                     {% elif app.status == 'OFFER_EXTENDED' %}
+                                        bg-indigo-950 border-indigo-500 text-indigo-400 border-dashed animate-pulse
+                                     {% else %}
+                                        bg-slate-100 dark:bg-slate-950 border-slate-300 dark:border-slate-900 text-slate-400 dark:text-slate-600
+                                     {% endif %}">
+                                     5
+                                </div>
+                                <span class="block text-xs font-bold mt-2 font-display {% if app.status == 'OFFER_EXTENDED' or app.status == 'OFFER_ACCEPTED' %}text-slate-800 dark:text-slate-200{% else %}text-slate-400 dark:text-slate-600{% endif %}">Offer Released</span>
+                                <span class="text-[10px] font-mono {% if app.status == 'OFFER_ACCEPTED' %}text-emerald-600 dark:text-emerald-400 font-bold{% elif app.status == 'OFFER_EXTENDED' %}text-amber-600 dark:text-amber-400 font-bold{% else %}text-slate-400 dark:text-slate-500{% endif %}">
+                                     {% if app.status == 'OFFER_ACCEPTED' %}Accepted{% elif app.status == 'OFFER_EXTENDED' %}Released{% else %}Pending{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recruiter Feedback notes & Interview Scheduling list -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-5 pt-4 bg-slate-950/40 p-4 rounded-2xl border border-slate-900/60">
+                    <!-- Left: recruiter feedback -->
+                    <div class="md:col-span-7 space-y-1">
+                        <span class="text-[10px] font-mono text-slate-500 uppercase font-black block">Corporate Assessment Status:</span>
+                        <p class="text-xs text-slate-350 leading-relaxed italic">
+                            Your application is actively tracked. Evaluative feedback details are confidentially shared with the placement administration trainers.
+                        </p>
+                    </div>
+
+                    <!-- Right: linked interviews -->
+                    <div class="md:col-span-5 space-y-3 md:border-l md:border-slate-900 md:pl-5">
+                        <span class="text-[10px] font-mono text-slate-500 uppercase font-black block">Linked Evaluation Interviews:</span>
+                        
+                        <div class="space-y-2">
+                            {% for interview in app.interviews.all %}
+                                <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-900/50 flex items-center justify-between gap-3 text-xs">
+                                    <div class="space-y-0.5 min-w-0">
+                                        <p class="font-bold text-slate-200 text-[11px] truncate">{{ interview.title }}</p>
+                                        <p class="text-[9.5px] font-mono text-slate-450">{{ interview.scheduled_at|date:"M d, f a" }}</p>
+                                    </div>
+                                    <div class="shrink-0 flex flex-col items-end gap-1">
+                                        <span class="text-[9px] font-mono px-1.5 py-0.5 rounded uppercase font-semibold
+                                              {% if interview.status == 'SCHEDULED' %}bg-amber-950/40 text-amber-400 border border-amber-900/10{% else %}bg-slate-900 text-slate-500 border border-slate-800{% endif %}">
+                                             {{ interview.status }}
+                                        </span>
+                                        {% if interview.meet_url and interview.status == 'SCHEDULED' %}
+                                            <a href="{{ interview.meet_url }}" target="_blank" class="text-[9.5px] font-semibold text-indigo-400 hover:underline">Join Meeting &nearr;</a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <p class="text-[10px] text-slate-600 font-mono">No specific evaluative rounds scheduled yet.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 7 Extended Offer Selection Letter desk panel -->
+                {% if app.status == 'OFFER_EXTENDED' or app.status == 'OFFER_ACCEPTED' %}
+                    {% for offer in app.trainee.offers.all %}
+                        {% if offer.job == app.job %}
+                            <div class="p-5 rounded-2xl bg-indigo-950/20 border border-indigo-900/80 space-y-4">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div class="space-y-0.5">
+                                        <span class="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-500/15 px-2 py-0.5 rounded border border-indigo-500/10 uppercase">Draft Offer Received</span>
+                                        <h3 class="text-sm font-bold text-white mt-1">Official Selection extended by {{ offer.company.company_name }}</h3>
+                                        <p class="text-xs text-slate-400 font-mono">Agreed Compensation Package: <strong class="text-emerald-400 font-sans text-sm">{{ offer.package }}</strong></p>
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-2shrink-0">
+                                        <a href="{% url 'applications:offer_download' offer.id %}" class="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-white font-bold text-xs select-none cursor-pointer transition-all flex items-center gap-1.5">
+                                            Download Letter Document
+                                        </a>
+
+                                        {% if offer.status == 'PENDING' %}
+                                            <a href="{% url 'applications:offer_accept' offer.id %}" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs select-none cursor-pointer transition-all">
+                                                Accept Offer
+                                            </a>
+                                            <a href="{% url 'applications:offer_reject' offer.id %}" class="px-3.5 py-2 rounded-xl bg-rose-950/40 border border-rose-900 hover:bg-rose-900 hover:text-white text-rose-450 font-semibold text-xs select-none cursor-pointer transition-all">
+                                                Decline
+                                            </a>
+                                        {% endif %}
+                                    </div>
+
+                                {% if offer.status == 'ACCEPTED' %}
+                                    <div class="flex items-center gap-2 text-xs text-emerald-400 font-mono bg-emerald-900/10 p-3 rounded-lg border border-emerald-900/30">
+                                        <span>✓</span>
+                                        <span>Official placement acceptance logged. The training center placement cell has locked this slot details successfully. Standard accreditation complete.</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Submissions control actions (withdraw) -->
+                {% if app.status == 'PENDING' or app.status == 'SHORTLISTED' %}
+                    {% if app.job.application_deadline >= today %}
+                        <div class="flex items-center justify-end border-t border-slate-900/40 pt-4">
+                            <a href="{% url 'applications:withdraw' app.id %}" 
+                               onclick="return confirm('Attention: Are you absolutely certain you want to withdraw this application entry? This action is irreversible.')"
+                               class="px-3.5 py-1.5 rounded-lg border border-rose-950 bg-rose-950/10 hover:bg-rose-950/30 text-rose-400 hover:text-rose-350 text-[10.5px] font-bold font-mono transition-all duration-200 cursor-pointer flex items-center gap-1 select-none">
+                                Withdraw Application &times;
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="flex items-center justify-end border-t border-slate-900/40 pt-4">
+                            <span class="text-[9.5px] font-mono text-slate-600 cursor-default select-none" title="Withdrawal is disabled because the application deadline has passed.">
+                                Withdrawal Closed (Deadline Passed)
+                            </span>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <!-- Entry Empty Panel -->
+            <div class="bg-slate-900/10 border border-slate-900/80 py-16 px-6 text-center rounded-3xl space-y-4">
+                <span class="text-4xl"></span>
+                <h3 class="text-lg font-black font-display text-white">No applications records found</h3>
+                <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+                    You haven't applied for any jobs or campaigns yet, or your search and filter parameters yielded zero records.
+                </p>
+                <div class="pt-2">
+                    <a href="{% url 'jobs:feed' %}" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl cursor-pointer transition-all inline-block">
+                        Explore Hiring Feed vacancies
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

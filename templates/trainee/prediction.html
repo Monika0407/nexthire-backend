@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire | Placement Prediction Report{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in text-left max-w-4xl mx-auto">
+    <!-- Header title -->
+    <div class="space-y-1.5 border-b border-slate-900 pb-4">
+        <h1 class="text-xl sm:text-2xl font-black font-display text-white flex items-center gap-2">
+            Placement Prediction Engine
+        </h1>
+        <p class="text-xs text-slate-400">Evaluate placement probability and readiness scores derived from your trainee profile metrics using our RandomForest machine learning model.</p>
+    </div>
+
+    <!-- Main Results Block -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+        <!-- Gauge Results Column (ColSpan: 5) -->
+        <div class="md:col-span-5 bg-slate-950 border border-slate-900 rounded-3xl p-6 flex flex-col items-center justify-center text-center space-y-6 shadow-xl">
+            <span class="text-[9px] font-mono font-bold uppercase tracking-wider text-slate-500 block border-b border-slate-900 w-full pb-3">Prediction Output</span>
+
+            <!-- Circular Gauge -->
+            <div class="relative w-44 h-44 rounded-full border-4 border-slate-900 flex items-center justify-center shadow-inner">
+                <svg class="absolute transform -rotate-90 w-full h-full" viewBox="0 0 100 100">
+                    <circle 
+                        cx="50" cy="50" r="44" 
+                        stroke="#1e293b" stroke-width="6" 
+                        fill="transparent" 
+                    />
+                    <circle 
+                        cx="50" cy="50" r="44" 
+                        stroke="{% if status_color == 'emerald' %}#10b981{% elif status_color == 'amber' %}#f59e0b{% else %}#f43f5e{% endif %}" stroke-width="6" 
+                        fill="transparent" 
+                        stroke-dasharray="276"
+                        stroke-dashoffset="calc(276 - (276 * {{ probability }}) / 100)"
+                        stroke-linecap="round"
+                    />
+                </svg>
+                <div class="text-center z-10">
+                    <span class="text-3xl font-black text-white font-mono">{{ probability }}%</span>
+                    <p class="text-[8px] font-mono uppercase tracking-widest text-slate-500 mt-1">Probability</p>
+                </div>
+            </div>
+
+            <!-- Prediction Label & Status -->
+            <div class="space-y-2">
+                <span class="text-xs text-slate-400">Classification consensus:</span>
+                <div class="text-lg font-black uppercase tracking-tight 
+                    {% if prediction_result == 'Placed' %}text-emerald-400{% else %}text-rose-450{% endif %}">
+                    {{ prediction_result }}
+                </div>
+                <div class="px-3 py-1 rounded-full border text-[10px] font-mono font-bold uppercase tracking-wide inline-block
+                    {% if status_color == 'emerald' %}bg-emerald-500/10 border-emerald-500/25 text-emerald-400
+                    {% elif status_color == 'amber' %}bg-amber-500/10 border-amber-500/25 text-amber-400
+                    {% else %}bg-rose-500/10 border-rose-500/25 text-rose-400{% endif %}">
+                    {{ readiness_status }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Parameters Breakdown (ColSpan: 7) -->
+        <div class="md:col-span-7 space-y-6">
+            <!-- Parameters Table -->
+            <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 space-y-4">
+                <h3 class="text-sm font-black font-display text-white border-b border-slate-900 pb-2">Model Input Parameters</h3>
+                <div class="space-y-3.5 text-xs">
+                    <!-- CGPA -->
+                    <div class="flex items-center justify-between py-1 border-b border-slate-900/40">
+                        <span class="text-slate-400">Academic CGPA</span>
+                        <span class="font-mono text-white font-bold">{{ trainee.cgpa }}/10.00</span>
+                    </div>
+
+                    <!-- Skills Count -->
+                    <div class="flex items-center justify-between py-1 border-b border-slate-900/40">
+                        <span class="text-slate-400">Validated Technical Skills</span>
+                        <span class="font-mono text-white font-bold">{{ trainee.skills|length }} tags</span>
+                    </div>
+
+                    <!-- Internship -->
+                    <div class="flex items-center justify-between py-1 border-b border-slate-900/40">
+                        <span class="text-slate-400">Corporate Internship Experience</span>
+                        <span class="font-mono text-white font-bold">{% if trainee.internships|length > 0 %}Yes ({{ trainee.internships|length }}){% else %}No{% endif %}</span>
+                    </div>
+
+                    <!-- Certifications -->
+                    <div class="flex items-center justify-between py-1 border-b border-slate-900/40">
+                        <span class="text-slate-400">Accredited Certifications</span>
+                        <span class="font-mono text-white font-bold">{{ trainee.certifications|length }} certifications</span>
+                    </div>
+
+                    <!-- Aptitude Score -->
+                    <div class="flex items-center justify-between py-1 border-b border-slate-900/40">
+                        <span class="text-slate-400">Aptitude Score (Placement Readiness Index)</span>
+                        <span class="font-mono text-white font-bold">{{ trainee.placement_readiness_score }}/100</span>
+                    </div>
+
+                    <!-- Projects Count -->
+                    <div class="flex items-center justify-between py-1 border-b border-slate-900/40">
+                        <span class="text-slate-400">Academic Projects count</span>
+                        <span class="font-mono text-white font-bold">2 (standard estimate)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actionable Advice Card -->
+            <div class="bg-indigo-950/10 border border-indigo-900/20 rounded-3xl p-6 space-y-3">
+                <h3 class="text-sm font-black font-display text-white">Improvement Action Plan</h3>
+                <ul class="space-y-2.5 text-xs text-slate-400 list-none m-0 p-0">
+                    {% if trainee.cgpa < 7.5 %}
+                        <li class="flex items-start gap-2">
+                            <span class="text-indigo-400 font-bold">✓</span>
+                            <span>Your CGPA is below 7.5. Many recruitment partners enforce strict cutoffs at 7.5. Try to boost academic performance in upcoming exams.</span>
+                        </li>
+                    {% endif %}
+                    {% if trainee.skills|length < 6 %}
+                        <li class="flex items-start gap-2">
+                            <span class="text-indigo-400 font-bold">✓</span>
+                            <span>Expand your technical skill set. Adding 3-4 industry-standard skills (such as React, AWS, or Docker) boosts corporate match scores significantly.</span>
+                        </li>
+                    {% endif %}
+                    {% if trainee.internships|length == 0 %}
+                        <li class="flex items-start gap-2">
+                            <span class="text-indigo-400 font-bold">✓</span>
+                            <span>Apply for internships. Real-world corporate exposure is one of the highest weighted features for recruitment classification algorithms.</span>
+                        </li>
+                    {% endif %}
+                    {% if trainee.placement_readiness_score < 75 %}
+                        <li class="flex items-start gap-2">
+                            <span class="text-indigo-400 font-bold">✓</span>
+                            <span>Practice mock tests on placement aptitude. Aim to push your logical, verbal, and programming aptitude scores above 75.</span>
+                        </li>
+                    {% endif %}
+                    {% if probability >= 75 %}
+                        <li class="flex items-start gap-2">
+                            <span class="text-emerald-400 font-bold">★</span>
+                            <span class="text-emerald-350">Great job! Your profile shows a mature readiness score. Continue applying to active postings and preparing for interviews.</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

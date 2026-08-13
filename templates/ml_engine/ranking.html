@@ -1,0 +1,128 @@
+<!-- templates/ml_engine/ranking.html -->
+{% extends 'base.html' %}
+{% block title %}NextHire | Fit-Score Candidate Rankings{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in">
+    <!-- Header banner -->
+    <div class="border-b border-slate-900 pb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <span class="text-[10px] font-mono font-black uppercase tracking-wider text-indigo-400">Phase 3 — Candidate Ranking Engine</span>
+            <h1 class="text-2xl font-black mt-2 tracking-tight">Recruiter Candidate Alignments Bench</h1>
+            <p class="text-xs text-slate-400 mt-1">Select any job postings to view ranked-ordered eligible candidate profiles based on multi-variate skill overlap coefficients.</p>
+        </div>
+        
+        <!-- Job Select dropdown -->
+        <form method="GET" class="flex items-center gap-2 max-w-sm shrink-0">
+            <select name="job_id" class="px-3 py-2 rounded-xl border border-slate-900 bg-slate-950 text-xs text-slate-300 font-bold focus:outline-none focus:border-indigo-505" onchange="this.form.submit()">
+                <option value="">-- Choose Job Opening --</option>
+                {% for job in all_jobs %}
+                <option value="{{ job.id }}" {% if selected_job and selected_job.id == job.id %}selected{% endif %}>{{ job.title }} ({{ job.recruiter.company_name }})</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    {% if selected_job %}
+    <div class="space-y-6">
+        <!-- Selected job overview card -->
+        <div class="p-5 border border-slate-900 bg-slate-950 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div class="text-left space-y-1">
+                <p class="text-xs text-indigo-400 font-mono font-bold uppercase">Evaluating Parameters For role</p>
+                <h2 class="text-lg font-black text-white leading-none">{{ selected_job.title }}</h2>
+                <p class="text-xs text-slate-450 font-semibold">{{ selected_job.recruiter.company_name }} — Min CGPA required: <span class="text-white">{{ selected_job.min_cgpa_required }}</span></p>
+            </div>
+
+            <!-- Skills listed -->
+            <div class="flex flex-wrap items-center gap-1.5 max-w-md">
+                {% for skill in selected_job.skills_required %}
+                <span class="px-2.5 py-0.5 rounded bg-slate-900 border border-slate-850 font-mono text-[9.5px] font-bold text-slate-400">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Ranking list -->
+        <div class="p-6 border border-slate-900 bg-slate-950 rounded-2xl space-y-4">
+            <h3 class="text-sm font-extrabold flex items-center gap-2 border-b border-slate-900 pb-3">
+                <span class="text-indigo-400"></span> Rank Ordered Candidates List
+            </h3>
+
+            {% if candidates_list %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs min-w-[700px]">
+                    <thead>
+                        <tr class="border-b border-slate-905 text-slate-500 font-mono font-bold uppercase tracking-wider text-[9px] py-1">
+                            <th class="py-3">RANK</th>
+                            <th class="py-3">CANDIDATE NAME</th>
+                            <th class="py-3">ACADEMIC ALIGNMENT</th>
+                            <th class="py-3">MATCH BREAKDOWN (SKILLS / CGPA / EXPS)</th>
+                            <th class="py-3 text-right">OVERALL MATCH FIT</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-900">
+                        {% for cand in candidates_list %}
+                        <tr class="hover:bg-slate-900/10 transition-colors">
+                            <!-- Rank -->
+                            <td class="py-4 font-mono font-black text-center">
+                                <span class="flex h-5 w-5 items-center justify-center rounded bg-slate-900 border border-slate-800 text-[10px] text-indigo-400 font-bold">
+                                    {{ cand.rank }}
+                                </span>
+                            </td>
+
+                            <!-- Student Info -->
+                            <td class="py-4 text-left font-bold text-white">
+                                {{ cand.student_name }} <br />
+                                <span class="text-[9.5px] text-slate-500 uppercase font-mono font-medium">{{ cand.branch }}</span>
+                            </td>
+
+                            <!-- Academics eligibility -->
+                            <td class="py-4">
+                                <span class="font-bold text-slate-100 font-mono">GPA: {{ cand.cgpa }}</span> <br />
+                                {% if cand.is_eligible %}
+                                <span class="text-[9px] font-mono font-black text-emerald-450 uppercase">Eligible threshold ✓</span>
+                                {% else %}
+                                <span class="text-[9px] font-mono font-black text-rose-455 uppercase">academic Gap ✗</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Match breakdowns bar -->
+                            <td class="py-4 max-w-sm space-y-1.5">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-[9.5px] text-slate-400 font-mono">Skills: {{ cand.breakdown.skills_score }}%</span>
+                                    <span class="text-[9.5px] text-slate-400 font-mono">Acad: {{ cand.breakdown.academic_score }}%</span>
+                                    <span class="text-[9.5px] text-slate-400 font-mono">Work: {{ cand.breakdown.experience_score }}%</span>
+                                </div>
+                                <div class="w-full bg-slate-900 rounded-full h-1 flex overflow-hidden">
+                                    <div class="bg-indigo-500" style="width: {{ cand.breakdown.skills_score }}%"></div>
+                                    <div class="bg-emerald-500" style="width: {{ cand.breakdown.academic_score }}%"></div>
+                                    <div class="bg-amber-500" style="width: {{ cand.breakdown.experience_score }}%"></div>
+                                </div>
+                            </td>
+
+                            <!-- Overall Fit result -->
+                            <td class="py-4 text-right font-black font-mono text-sm">
+                                <span class="{% if cand.match_score >= 75 %}text-emerald-400{% elif cand.match_score >= 50 %}text-amber-400{% else %}text-rose-400{% endif %}">
+                                    {{ cand.match_score }}%
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-slate-500 text-xs italic">
+                No candidate evaluations located inside this evaluation frame.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="p-12 border border-dashed border-slate-900 bg-slate-950 rounded-2xl text-center flex flex-col items-center justify-center min-h-[350px]">
+        <span class="text-3xl"></span>
+        <h4 class="text-xs font-black text-slate-350 mt-4 uppercase tracking-wider">Awaiting Opening vacancy Parameter</h4>
+        <p class="text-[10.5px] text-slate-500 mt-1 max-w-[270px]">Select any of the active job openings in the selector top-right to initiate candidate rankings alignment evaluations.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

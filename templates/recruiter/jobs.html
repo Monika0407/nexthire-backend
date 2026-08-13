@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire | Manage Job Postings{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8 animate-fade-in text-left">
+    <!-- Header banner -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-slate-900/40 p-6 rounded-3xl border border-slate-900">
+        <div class="space-y-1.5">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-indigo-400">Recruiter Control</span>
+            <h1 class="text-2xl sm:text-3xl font-black font-display tracking-tight text-white">
+                Job Postings Manager
+            </h1>
+            <p class="text-sm text-slate-400">Create, modify details, change status, and delete active placement opportunities on the trainee feed.</p>
+        </div>
+
+        <a href="{% url 'recruiters:job_create' %}" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold font-display transition-all shadow-lg shadow-indigo-600/15 flex items-center gap-1.5 self-start sm:self-center">
+            Publish New Job Posting
+        </a>
+    </div>
+
+    <!-- Active Jobs list card -->
+    <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 sm:p-8 space-y-6">
+        <h2 class="text-lg font-black font-display text-white flex items-center gap-2">
+            <span class="w-1.5 h-4 bg-indigo-500 rounded"></span> Your Posted Openings ({{ posted_jobs.count }})
+        </h2>
+
+        <div class="space-y-6">
+            {% if posted_jobs %}
+                {% for job in posted_jobs %}
+                    <div class="bg-slate-950/40 border border-slate-900 hover:border-slate-800 rounded-2xl p-6 space-y-4 transition-all hover:bg-slate-950/80">
+                        <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                            <div class="space-y-2 flex-grow">
+                                <div class="flex items-center gap-3 flex-wrap">
+                                    <span class="text-[9px] font-mono font-extrabold px-2 py-0.5 rounded uppercase
+                                        {% if job.is_active %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400
+                                        {% else %}bg-slate-800 text-slate-500 border border-slate-800/80{% endif %}">
+                                        {{ job.is_active|yesno:"Open / Active,Closed / Inactive" }}
+                                    </span>
+                                    <span class="text-[10px] text-slate-500 font-mono">Posted {{ job.posted_at|date:"M d, Y" }}</span>
+                                </div>
+                                <h3 class="text-lg font-bold text-white font-sans">{{ job.title }}</h3>
+                                <p class="text-xs text-slate-400 leading-relaxed font-sans pr-4">{{ job.description }}</p>
+                            </div>
+
+                            <!-- Actions controls -->
+                            <div class="flex flex-wrap md:flex-nowrap items-center gap-2 shrink-0">
+                                <a href="{% url 'recruiters:job_toggle' job.id %}" class="px-3.5 py-2 rounded-xl text-xs font-mono font-semibold transition-all border border-slate-350 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800" title="Toggle visibility status">
+                                    {{ job.is_active|yesno:"Close Role,Open Role" }}
+                                </a>
+                                <a href="{% url 'recruiters:job_edit' job.id %}" class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-950/10 text-indigo-650 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-950/20">
+                                    Edit Specs
+                                </a>
+                                <a href="{% url 'recruiters:job_delete' job.id %}" onclick="return confirm('Ensure deletion? Stored candidate workflows for this job will be wiped.')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all border border-rose-200 dark:border-rose-900/30 bg-rose-50 dark:bg-rose-950/10 text-rose-650 dark:text-red-400 hover:bg-rose-100 dark:hover:bg-rose-950/20">
+                                    &times; Delete
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Job parameters summary grid -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-900/60 text-xs text-slate-400 font-mono">
+                            <div>
+                                <span class="text-slate-500 block text-[10px] uppercase font-bold">Eligibility</span>
+                                <strong class="text-slate-200">{{ job.eligibility }} CGPA+</strong>
+                            </div>
+                            <div>
+                                <span class="text-slate-500 block text-[10px] uppercase font-bold">Salary CTC</span>
+                                <strong class="text-slate-250 text-emerald-400">{{ job.salary }}</strong>
+                            </div>
+                            <div>
+                                <span class="text-slate-500 block text-[10px] uppercase font-bold">Location</span>
+                                <strong class="text-slate-200">{{ job.location }}</strong>
+                            </div>
+                            <div>
+                                <span class="text-slate-500 block text-[10px] uppercase font-bold">Deadline</span>
+                                <strong class="text-slate-200">{{ job.deadline|date:"M d, Y" }}</strong>
+                            </div>
+                        </div>
+
+                        <!-- Skills requirement tags -->
+                        <div class="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-900/40 text-xs">
+                            <div class="flex flex-wrap gap-1.5">
+                                {% for skill in job.skills_required %}
+                                    <span class="text-[9.5px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800/80">{{ skill }}</span>
+                                {% endfor %}
+                            </div>
+
+                            <a href="{% url 'recruiters:view_applicants_by_job' job.id %}" class="text-[11px] font-bold text-indigo-400 hover:text-indigo-350 flex items-center gap-1 font-sans">
+                                View Candidates Bench ({{ job.applications.count }})</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="bg-slate-950/20 border border-dashed border-slate-800 py-16 px-6 rounded-2xl text-center space-y-4">
+                    <span class="text-4xl block"></span>
+                    <div class="space-y-1">
+                        <p class="text-sm text-slate-400 font-bold">No vacancy postings published yet.</p>
+                        <p class="text-xs text-slate-650">Launch your very first placement vacancy to begin collecting smart trainee applications instant matches.</p>
+                    </div>
+                    <a href="{% url 'recruiters:job_create' %}" class="inline-block px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-600/15">
+                        Publish Vacant Opening
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

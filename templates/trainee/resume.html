@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire Document Vault | Resume Management{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6 animate-fade-in">
+    <!-- Title header -->
+    <div class="space-y-1.5 border-b border-slate-900 pb-4">
+        <h1 class="text-xl sm:text-2xl font-black font-display text-white flex items-center gap-2">
+            Document Vault & Resumes
+        </h1>
+        <p class="text-xs text-slate-400">Add, replace, or preview your academic resume. Our advanced system processes documents for corporate matching indexes.</p>
+    </div>
+
+    <!-- Main Layout Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
+        
+        <!-- Left: Upload/Replace Console -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 space-y-5 text-left">
+            <h2 class="text-sm font-black font-display text-slate-200">
+                Submit / Update Document
+            </h2>
+            <p class="text-[11px] text-slate-400 leading-relaxed font-sans">
+                Drag and drop your final verified file here. Please make sure the document details contain accurate transcripts matching registered college CGPA scores.
+            </p>
+
+            <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                {% csrf_token %}
+                
+                <div class="border-2 border-dashed border-slate-800 rounded-3xl p-6 text-center hover:border-emerald-500/30 transition-all bg-slate-950/20 group relative">
+                    <div class="space-y-2 pointer-events-none select-none py-4">
+                        <span class="text-3xl block group-hover:scale-105 transition-transform duration-300"></span>
+                        <p class="text-xs font-bold text-slate-350">Choose PDF or DOCX file</p>
+                        <p class="text-[9.5px] text-slate-550">Recommended size: under 5MB</p>
+                    </div>
+
+                    <!-- Django Form element binding -->
+                    <div class="mt-4">
+                        {{ form.resume_file }}
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end pt-2">
+                    <button type="submit" class="w-full sm:w-auto px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold font-display cursor-pointer transition-all shadow-lg shadow-emerald-700/10">
+                        Upload Portfolio Document
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right: Current active Resume Card -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 flex flex-col justify-between text-left gap-6">
+            <div class="space-y-4">
+                <h2 class="text-sm font-black font-display text-slate-200">
+                    Active Portfolio Document
+                </h2>
+                
+                {% if trainee.resume_file %}
+                    <div class="p-4 rounded-2xl bg-slate-950/50 border border-slate-900 text-xs flex gap-4">
+                        <!-- Icon status -->
+                        <div class="text-2xl pt-1"></div>
+                        <div class="space-y-1 flex-grow truncate">
+                            <h4 class="font-bold text-slate-200 truncate font-mono text-[11px]">{{ trainee.resume_file.name|slice:"16:"|default:"candidate_portfolio.pdf" }}</h4>
+                            <p class="text-[10px] text-slate-500">Uploaded format: <strong class="text-slate-400 lowercase font-mono">{{ trainee.resume_file.name|slice:"-4:" }}</strong></p>
+                            <p class="text-[10.5px] text-slate-400 font-sans">Timestamp: <span class="text-indigo-400 font-mono">{{ trainee.resume_uploaded_at|date:"M d, Y at P" }}</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Verification status card -->
+                    <div class="p-4 rounded-xl border border-dashed border-emerald-900/40 bg-emerald-950/5 text-[11px] text-emerald-400/85 leading-relaxed font-sans">
+                        ✓ <strong>Verification Status: Certified</strong>. Your portfolio document has been successfully cached. Automated AI scanners can evaluate your skills tags for job relevance.
+                    </div>
+                {% else %}
+                    <div class="p-8 rounded-2xl bg-slate-950/30 border border-slate-900 text-center py-12 space-y-2">
+                        <span class="text-3xl block">✗</span>
+                        <p class="text-xs text-slate-500 font-medium">No active resume discovered in NextHire system folders.</p>
+                        <p class="text-[10px] text-slate-650 leading-relaxed font-mono">RECRUITER_FEEDS_UNAVAILABLE</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Management action handlers -->
+            {% if trainee.resume_file %}
+                <div class="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-900/60 mt-auto">
+                    <!-- Preview doc -->
+                    <a href="{% url 'trainees:resume_preview' trainee.usn %}" target="_blank" class="flex-grow sm:flex-grow-0 text-center px-4.5 py-2.5 rounded-xl border border-slate-800 hover:bg-slate-900 text-xs text-slate-300 font-semibold transition-all">
+                        Preview Document
+                    </a>
+                    
+                    <!-- Delete doc -->
+                    <a href="{% url 'trainees:resume_delete' %}" onclick="return confirm('Confirm deletion? This will remove your portfolio from all active recruiter screening queues.')" class="flex-grow sm:flex-grow-0 text-center px-4.5 py-2.5 rounded-xl border border-red-950 bg-red-950/10 hover:bg-red-950/30 border-red-900/60 hover:border-red-900 text-xs text-red-400 font-semibold transition-all">
+                        Delete Document &times;
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

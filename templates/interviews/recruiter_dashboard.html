@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Interviews & Selections Manager | Recruiter Portal{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in">
+    <!-- Header banner -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-slate-900/40 p-6 rounded-3xl border border-slate-900">
+        <div class="space-y-1">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-emerald-450">Acreedit Recruitment Console</span>
+            <h1 class="text-2xl sm:text-3xl font-black font-display tracking-tight text-white">
+                Interviews & Selection Dispatch
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400">
+                Setup evaluation round meet spots, log rating scorecards, and extend official career offer letters to qualified trainee candidates.
+            </p>
+        </div>
+    </div>
+
+    <!-- Main grid layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Scheduled and Completed lists (colSpan: 7) -->
+        <div class="lg:col-span-7 space-y-8">
+            <!-- Active schedules -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-900 pb-3">
+                    <h2 class="text-base font-black font-display text-indigo-400 flex items-center gap-2">
+                        Active Scheduled Assessments
+                    </h2>
+                    <span class="text-xs font-mono font-bold text-slate-500 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-lg">
+                        {{ scheduled_interviews.count }} slots
+                    </span>
+                </div>
+
+                <div class="space-y-4">
+                    {% if scheduled_interviews %}
+                        {% for interview in scheduled_interviews %}
+                        <div class="bg-slate-950 border border-slate-900 p-5 rounded-2xl flex flex-col justify-between gap-4">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="space-y-1">
+                                    <span class="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-500/5 border border-indigo-500/10 px-2 py-0.5 rounded font-bold uppercase">{{ interview.get_stage_display }}</span>
+                                    <h3 class="text-base font-bold text-white mt-1.5 font-sans">{{ interview.title }}</h3>
+                                    <p class="text-xs text-slate-400">
+                                        Candidate: <strong class="text-slate-250 font-sans font-medium">{{ interview.application.trainee.user.get_full_name }}</strong> (Batch Code: <span class="font-mono text-slate-400 text-xs">{{ interview.application.trainee.batch_code }}</span>)
+                                    </p>
+                                    <p class="text-[11px] text-slate-550 font-mono">Job Title: {{ interview.application.job.title }}</p>
+                                </div>
+                                <span class="text-[9px] font-mono uppercase bg-slate-900 text-slate-500 px-2 py-0.5 rounded border border-slate-800">{{ interview.scheduled_at|date:"M d, g:i a" }}</span>
+                            </div>
+
+                            <!-- Meet detail benchmarks -->
+                            <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900/10 border border-slate-900 p-3 rounded-xl text-xs">
+                                <p class="text-slate-400 font-mono">Platform: <strong class="text-indigo-400">{{ interview.platform }}</strong></p>
+                                {% if interview.meet_url %}
+                                    <a href="{{ interview.meet_url }}" target="_blank" class="text-indigo-455 hover:underline font-semibold text-[11px]">Join Video Call &nearr;</a>
+                                {% endif %}
+                            </div>
+
+                            <!-- Actions Row (Phase 4 Evaluates) -->
+                            <div class="flex items-center justify-end gap-2 border-t border-slate-900/40 pt-3">
+                                <a href="{% url 'interviews:cancel' interview.id %}" 
+                                   onclick="return confirm('Attention: Confirm slot cancellation. Alerts will sync to trainee.')"
+                                   class="px-3.5 py-1.5 rounded-lg border border-slate-900/60 hover:bg-rose-950/20 hover:border-rose-900 hover:text-rose-455 text-[11px] font-bold text-slate-500 transition-all cursor-pointer">
+                                    Cancel Slot
+                                </a>
+                                <a href="{% url 'interviews:evaluate' interview.id %}" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[11px] cursor-pointer transition-all">
+                                    Complete & Log Grade
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-xs text-slate-500 font-mono py-6 text-center border border-slate-900/60 rounded-xl font-light">No active assessments scheduled currently.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Histories lists -->
+            <div class="space-y-4">
+                <div class="border-b border-slate-900 pb-3">
+                    <h2 class="text-sm font-black font-display text-slate-400">Historic Evaluations and Cancelled Slots</h2>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {% for interview in completed_interviews %}
+                    <div class="bg-slate-900/10 border border-slate-900 p-4 rounded-xl space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[9px] font-mono text-emerald-450 bg-emerald-500/5 px-2 py-0.5 rounded border border-emerald-500/10 font-bold uppercase">Evaluated</span>
+                            <span class="text-[10px] font-mono font-bold text-amber-450 bg-amber-500/5 border border-amber-500/10 px-2 py-0.5 rounded">⭐ {{ interview.rating_score }}/5</span>
+                        </div>
+                        <h4 class="font-bold text-slate-200 text-xs sm:text-sm truncate">{{ interview.title }}</h4>
+                        <p class="text-[10px] text-slate-400 font-semibold">{{ interview.application.trainee.user.get_full_name }}</p>
+                        {% if interview.feedback_notes %}
+                            <p class="text-[10px] text-slate-505 truncate leading-relaxed">Remarks: {{ interview.feedback_notes }}</p>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                        <p class="text-[10.5px] text-slate-600 font-mono italic">No completed interviews logged yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Screening and Offer releasing (colSpan: 5) -->
+        <div class="lg:col-span-5 space-y-8">
+            <!-- Shortlisted ready to Schedule (Phase 5) -->
+            <div class="bg-slate-900/15 border border-slate-900 rounded-3xl p-5 space-y-4">
+                <div class="border-b border-slate-900 pb-2.5 flex items-center justify-between">
+                    <h3 class="text-xs font-black font-display text-white uppercase tracking-wider">
+                        Awaiting Video Invite
+                    </h3>
+                    <span class="text-[10px] font-mono font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/10 px-2 py-0.5 rounded">Shortlisted Queue</span>
+                </div>
+
+                <div class="space-y-3.5 max-h-[300px] overflow-y-auto pr-1">
+                    {% if shortlisted_applications %}
+                        {% for app in shortlisted_applications %}
+                        <div class="text-xs bg-slate-950 p-3 rounded-xl border border-slate-900/80 flex items-center justify-between gap-3">
+                            <div class="space-y-0.5 min-w-0">
+                                <h4 class="font-bold text-slate-200 text-[11px] truncate">{{ app.trainee.user.get_full_name }}</h4>
+                                <p class="text-[9.5px] font-mono text-slate-450">{{ app.trainee.batch_code }} &nbsp;|&nbsp; GPA: {{ app.trainee.cgpa }}</p>
+                                <p class="text-[9px] text-indigo-400 font-mono truncate">Role: {{ app.job.title }}</p>
+                            </div>
+                            
+                            <a href="{% url 'interviews:schedule' app.id %}" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] rounded-lg shrink-0 transition-all select-none">
+                                Send Invite
+                            </a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-xs text-slate-600 font-mono py-4 text-center">Your shortlisted candidate queue is clear.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Interview completed ready for Select Offer (Phase 7) -->
+            <div class="bg-indigo-950/5 border border-indigo-900/60 rounded-3xl p-5 space-y-4 shadow-[0_0_20px_rgba(99,102,241,0.02)]">
+                <div class="border-b border-slate-900 pb-2.5 flex items-center justify-between">
+                    <h3 class="text-xs font-black font-display text-white uppercase tracking-wider">
+                        Dispatch Offer letters
+                    </h3>
+                    <span class="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/10 px-2 py-0.5 rounded">Placement Stage</span>
+                </div>
+
+                <div class="space-y-3.5 max-h-[300px] overflow-y-auto pr-1">
+                    {% if evaluated_applications %}
+                        {% for app in evaluated_applications %}
+                        <div class="text-xs bg-slate-950/80 p-3.5 rounded-xl border border-indigo-900/20 flex flex-col justify-between gap-3">
+                            <div class="space-y-0.5 min-w-0">
+                                <h4 class="font-bold text-slate-200 text-[11.5px] truncate">{{ app.trainee.user.get_full_name }}</h4>
+                                <p class="text-[9.5px] font-mono text-slate-450">{{ app.trainee.batch_code }} &bull; Course: {{ app.trainee.branch }}</p>
+                                <p class="text-[10px] text-emerald-450 font-semibold font-sans mt-1">Designation: {{ app.job.title }}</p>
+                                {% if app.feedback_notes %}
+                                    <p class="text-[9.5px] text-slate-500 italic truncate mt-0.5">{{ app.feedback_notes }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="flex items-center justify-end mt-1">
+                                <a href="{% url 'applications:offer_generate' app.id %}" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10.5px] rounded-lg shrink-0 transition-all select-none shadow">
+                                    Draft Selection Offer
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-xs text-slate-600 font-mono py-4 text-center">No outstanding candidates ready for placement contract generation.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

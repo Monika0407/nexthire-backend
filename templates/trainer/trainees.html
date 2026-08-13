@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}Student Placement Verification Bench | NextHire{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/40 p-6 rounded-3xl border border-slate-900">
+        <div class="space-y-1">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-indigo-400">Administration Control Desk</span>
+            <h1 class="text-2xl font-black font-display text-white">Student Verification Bench</h1>
+            <p class="text-xs text-slate-400">Review trainee profiles, manage accreditation statuses, and recommend candidates to enterprise recruiters.</p>
+        </div>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="bg-slate-900/20 border border-slate-900 p-5 rounded-2xl">
+        <form method="get" class="space-y-4">
+            <input type="hidden" name="status" value="{{ status_filter }}">
+            
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                <!-- Search bar -->
+                <div class="relative w-full md:col-span-5">
+                    <input type="text" name="q" value="{{ search_q }}" placeholder="Search by name, email, or Batch Code..." 
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 pr-10 text-xs text-slate-100 placeholder-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all">
+                    <button type="submit" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white cursor-pointer">
+                       
+                    </button>
+                </div>
+
+                <!-- Course Dropdown -->
+                <div class="md:col-span-3">
+                    <select name="course" onchange="this.form.submit()" 
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 focus:border-indigo-500 focus:outline-none cursor-pointer">
+                        <option value="">Filter by Course...</option>
+                        {% for c in all_courses %}
+                            <option value="{{ c.id }}" {% if c.id == course_filter %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Job Match Dropdown -->
+                <div class="md:col-span-4">
+                    <select name="job_filter" onchange="this.form.submit()" 
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 focus:border-indigo-500 focus:outline-none cursor-pointer">
+                        <option value="">Show Match for Job...</option>
+                        {% for j in active_jobs %}
+                            <option value="{{ j.id }}" {% if j.id == job_filter %}selected{% endif %}>{{ j.title }} ({{ j.recruiter.company_name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Second Row: Status buttons & Handled Toggle -->
+            <div class="flex flex-col sm:flex-row gap-4 items-center justify-between border-t border-slate-900 pt-3">
+                <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                    <a href="?q={{ search_q }}&course={{ course_filter }}&job_filter={{ job_filter }}&handled_only={% if handled_only %}true{% endif %}&status=" 
+                       class="px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all {% if not status_filter %}bg-indigo-650/10 border-indigo-500/60 text-indigo-400{% else %}bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200{% endif %}">
+                        All Status
+                    </a>
+                    <a href="?q={{ search_q }}&course={{ course_filter }}&job_filter={{ job_filter }}&handled_only={% if handled_only %}true{% endif %}&status=pending" 
+                       class="px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all {% if status_filter == 'pending' %}bg-amber-500/10 border-amber-500/60 text-amber-400{% else %}bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200{% endif %}">
+                        Pending
+                    </a>
+                    <a href="?q={{ search_q }}&course={{ course_filter }}&job_filter={{ job_filter }}&handled_only={% if handled_only %}true{% endif %}&status=approved" 
+                       class="px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all {% if status_filter == 'approved' %}bg-emerald-500/10 border-emerald-500/60 text-emerald-400{% else %}bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200{% endif %}">
+                        Approved
+                    </a>
+                    <a href="?q={{ search_q }}&course={{ course_filter }}&job_filter={{ job_filter }}&handled_only={% if handled_only %}true{% endif %}&status=rejected" 
+                       class="px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all {% if status_filter == 'rejected' %}bg-rose-500/10 border-rose-500/60 text-rose-450{% else %}bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200{% endif %}">
+                        Rejected
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                    <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
+                        <input type="checkbox" name="handled_only" value="true" {% if handled_only %}checked{% endif %} onchange="this.form.submit()"
+                               class="form-checkbox rounded bg-slate-950 border-slate-800 text-indigo-600 focus:ring-0 focus:ring-offset-0">
+                        <span>Show only my Handled Courses</span>
+                    </label>
+                    
+                    {% if search_q or course_filter or job_filter or status_filter or handled_only %}
+                        <a href="{% url 'trainer:trainees' %}" class="text-xs text-slate-500 hover:text-white underline">
+                            Clear Filters
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Student Cards List -->
+    <div class="space-y-6">
+        {% if trainees %}
+            {% for trainee in trainees %}
+            <div class="bg-slate-900/15 border border-slate-900 rounded-3xl p-6 transition-all hover:border-slate-850">
+                <div class="flex flex-col lg:flex-row gap-6 justify-between">
+                    <!-- Left: Profile Details -->
+                    <div class="flex gap-4">
+                        <!-- Profile Image placeholder -->
+                        <div class="w-12 h-12 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center text-sm font-mono font-bold text-indigo-400 uppercase shrink-0">
+                            {{ trainee.user.email|slice:":2" }}
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-sm font-bold text-white">{{ trainee.user.get_full_name|default:trainee.user.email }}</h3>
+                                <span class="font-mono text-[10px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">{{ trainee.batch_code }}</span>
+                                
+                                <!-- Status Badge -->
+                                {% if trainee.approval_status == 'approved' %}
+                                    <span class="text-[9px] font-mono font-bold text-emerald-400 bg-emerald-950/30 border border-emerald-900/60 px-2 py-0.5 rounded-full">APPROVED</span>
+                                {% elif trainee.approval_status == 'rejected' %}
+                                    <span class="text-[9px] font-mono font-bold text-rose-450 bg-rose-950/30 border border-rose-900/60 px-2 py-0.5 rounded-full">REJECTED</span>
+                                {% else %}
+                                    <span class="text-[9px] font-mono font-bold text-amber-400 bg-amber-950/30 border border-amber-900/60 px-2 py-0.5 rounded-full">PENDING</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs text-slate-500 font-mono">{{ trainee.user.email }}</p>
+                            
+                            {% if trainee.course_edit_request_status == 'pending' and trainee.can_manage %}
+                                <div class="mt-3 bg-amber-500/5 border border-amber-500/20 p-3 rounded-2xl flex items-center justify-between gap-4 max-w-md">
+                                    <span class="text-[10px] text-amber-500 font-mono font-bold uppercase">Requested Course Edit</span>
+                                    <div class="flex gap-2 shrink-0">
+                                        <form method="POST" action="{% url 'trainer:approve' %}" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="trainee_id" value="{{ trainee.id }}">
+                                            <input type="hidden" name="action" value="approve_course_edit">
+                                            <button type="submit" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] rounded cursor-pointer transition-all">
+                                                Approve
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{% url 'trainer:approve' %}" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="trainee_id" value="{{ trainee.id }}">
+                                            <input type="hidden" name="action" value="reject_course_edit">
+                                            <button type="submit" class="px-2.5 py-1 border border-red-900 hover:bg-red-950/20 text-red-400 text-[10px] rounded font-bold cursor-pointer transition-all">
+                                                Reject
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Academic & Skills Stats -->
+                            <div class="flex flex-wrap gap-x-4 gap-y-1.5 pt-2 text-[11px] text-slate-400">
+                                <span>Degree: <strong class="text-slate-200">{{ trainee.get_degree_display }}</strong></span>
+                                <span class="hidden sm:inline text-slate-800">|</span>
+                                <span>Branch: <strong class="text-slate-200">{{ trainee.branch }}</strong></span>
+                                <span class="hidden sm:inline text-slate-800">|</span>
+                                <span>CGPA: <strong class="text-indigo-400 font-mono font-bold">{{ trainee.cgpa }} / 10.0</strong></span>
+                                <span class="hidden sm:inline text-slate-800">|</span>
+                                <span>Experience: <strong class="text-amber-400 font-mono font-bold">{{ trainee.experience_years }} year{{ trainee.experience_years|pluralize }}</strong></span>
+                            </div>
+
+                            <!-- Enrolled Courses -->
+                            {% if trainee.courses.exists %}
+                            <div class="flex flex-wrap gap-1.5 mt-3">
+                                <span class="text-[10px] text-slate-500 font-mono uppercase font-bold mr-1 self-center">Courses:</span>
+                                {% for course in trainee.courses.all %}
+                                <span class="text-[10px] bg-indigo-950/20 border border-indigo-900/40 text-indigo-400 px-2 py-0.5 rounded-lg font-medium">{{ course.name }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            {% if trainee.skills %}
+                            <div class="flex flex-wrap gap-1 mt-3">
+                                {% for skill in trainee.skills %}
+                                <span class="text-[10px] bg-slate-950 border border-slate-800/80 text-slate-400 px-2 py-0.5 rounded-lg font-medium">{{ skill }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <!-- Application & Interview Logs for Trainers -->
+                            {% if trainee.applications.exists %}
+                            <div class="mt-4 p-3.5 bg-slate-950/60 rounded-xl border border-slate-850/60 text-xs text-left max-w-2xl">
+                                <span class="text-[10px] font-mono text-indigo-400 uppercase font-bold block mb-2">Corporate Interview Audit Log</span>
+                                <div class="space-y-3">
+                                    {% for app in trainee.applications.all %}
+                                        <div class="border-b border-slate-900 last:border-b-0 pb-2.5 last:pb-0">
+                                            <div class="flex justify-between items-center flex-wrap gap-2">
+                                                <span class="font-bold text-slate-200">{{ app.job.title }} &bull; <span class="text-slate-450 font-normal">{{ app.job.recruiter.company_name }}</span></span>
+                                                <span class="text-[9.5px] font-mono font-bold bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/10">{{ app.get_status_display }}</span>
+                                            </div>
+                                            {% if app.interviews.exists %}
+                                                <div class="mt-2 pl-3 border-l border-slate-850 space-y-2">
+                                                    {% for interview in app.interviews.all %}
+                                                        <div class="flex justify-between items-start flex-wrap gap-2 text-[11px]">
+                                                            <div class="space-y-0.5">
+                                                                <span class="text-slate-350 font-semibold">{{ interview.title }} ({{ interview.get_stage_display }}):</span>
+                                                                <span class="font-mono text-[10px] font-semibold {% if interview.status == 'COMPLETED' or interview.status == 'SELECTED' %}text-emerald-400{% elif interview.status == 'REJECTED' %}text-rose-455{% else %}text-amber-400{% endif %}">{{ interview.get_status_display }}</span>
+                                                                {% if interview.feedback_notes %}
+                                                                    <p class="text-[10px] text-slate-500 italic mt-0.5 leading-relaxed">&ldquo;{{ interview.feedback_notes }}&rdquo;</p>
+                                                                {% endif %}
+                                                            </div>
+                                                            {% if interview.rating_score %}
+                                                                <span class="text-[10px] font-mono font-bold text-amber-450 bg-amber-500/5 border border-amber-500/10 px-2 py-0.5 rounded shrink-0">⭐ {{ interview.rating_score }}/5</span>
+                                                            {% endif %}
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <p class="text-[10px] text-slate-600 font-mono italic pl-3 mt-1">No interview rounds scheduled yet.</p>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Right: Actions Box -->
+                    <div class="flex flex-col sm:flex-row lg:flex-col gap-4 justify-between lg:justify-start lg:items-end min-w-[240px] shrink-0 border-t border-slate-900 lg:border-t-0 pt-4 lg:pt-0">
+                        {% if trainee.can_manage %}
+                        <!-- Verification Actions -->
+                        <div class="flex items-center gap-2">
+                            {% if trainee.approval_status != 'approved' %}
+                            <form method="post" action="{% url 'trainer:approve' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="trainee_id" value="{{ trainee.id }}">
+                                <input type="hidden" name="action" value="approve">
+                                <button type="submit" class="px-3.5 py-1.8 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-all cursor-pointer">
+                                    Approve
+                                </button>
+                            </form>
+                            {% endif %}
+                            
+                            {% if trainee.approval_status != 'rejected' %}
+                            <form method="post" action="{% url 'trainer:approve' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="trainee_id" value="{{ trainee.id }}">
+                                <input type="hidden" name="action" value="reject">
+                                <button type="submit" class="px-3.5 py-1.8 bg-rose-650 hover:bg-rose-600 text-white text-xs font-bold rounded-lg transition-all cursor-pointer">
+                                    Reject
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+
+                        <!-- Recommendations Center (Only for approved trainees) -->
+                        {% if trainee.approval_status == 'approved' %}
+                        <div class="w-full bg-slate-950/60 border border-slate-850 p-4 rounded-xl space-y-3 mt-1 text-left lg:text-right">
+                            <h4 class="text-xs font-bold text-slate-350 uppercase tracking-wider">Recommend for Job</h4>
+                            <form method="post" action="{% url 'trainer:recommend' %}" class="space-y-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="trainee_id" value="{{ trainee.id }}">
+                                
+                                <select name="job_id" required 
+                                        class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-300 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all">
+                                    <option value="" disabled selected>Select Active Job...</option>
+                                    {% for job in trainee.eligible_jobs %}
+                                        <option value="{{ job.id }}">{{ job.title }} ({{ job.recruiter.company_name }})</option>
+                                    {% endfor %}
+                                </select>
+
+                                <input type="text" name="comments" placeholder="Comments (e.g. Highly qualified)..." 
+                                       class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-300 placeholder-slate-650 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all">
+
+                                <button type="submit" class="w-full py-2 bg-indigo-650 hover:bg-indigo-600 text-white text-[11px] font-bold rounded-lg transition-all cursor-pointer">
+                                    Send Recommendation
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <!-- Read-only Indicator -->
+                        <span class="text-[10px] font-mono text-slate-500 italic font-semibold">Course managed by other trainer</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="bg-slate-900/10 border border-slate-900 p-12 text-center rounded-3xl space-y-2">
+            <p class="text-slate-400 text-sm font-medium">No candidate trainees found matching the query.</p>
+            <p class="text-slate-600 text-xs font-mono">Try adjusting filters or checking user registration counts.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

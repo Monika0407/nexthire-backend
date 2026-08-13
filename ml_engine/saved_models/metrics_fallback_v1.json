@@ -1,0 +1,29 @@
+{
+    "version": "fallback_v1",
+    "algorithm": "RandomForestClassifier",
+    "trained_at": "2026-06-23T09:17:08.301204",
+    "dataset_rows": 1500,
+    "accuracy": 0.9633333333333334,
+    "precision": 0.975177304964539,
+    "recall": 0.985663082437276,
+    "f1_score": 0.9803921568627451,
+    "confusion_matrix": [
+        [
+            14,
+            7
+        ],
+        [
+            4,
+            275
+        ]
+    ],
+    "feature_importances": {
+        "cgpa": 0.4762041563842473,
+        "skills_count": 0.07827621110752522,
+        "internships_count": 0.1425152737939806,
+        "certifications_count": 0.02774078224149744,
+        "aptitude_score": 0.12115716247759485,
+        "projects_count": 0.1541064139951546
+    },
+    "description": ""
+}

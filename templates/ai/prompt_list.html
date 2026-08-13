@@ -1,0 +1,58 @@
+<!-- templates/ai/prompt_list.html -->
+{% extends 'base.html' %}
+{% block title %}NextHire | Prompts Console{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in max-w-5xl mx-auto">
+    <!-- Header banner details -->
+    <div class="border-b border-slate-900 pb-5">
+        <a href="{% url 'ai:dashboard' %}" class="text-xs font-semibold text-indigo-400 hover:underline">Back to Strategic Insights Hub</a>
+        <h1 class="text-2xl font-black mt-2 tracking-tight">AI System Prompts Ledger Console</h1>
+        <p class="text-xs text-slate-400 mt-1">Review, version-control, and live-edit custom LLM prompts on the fly. Upgrading instructional parameters dynamically realigns model outputs.</p>
+    </div>
+
+    <!-- Listings list -->
+    <ol class="p-6 border border-slate-900 bg-slate-950 rounded-2xl space-y-4 list-none m-0">
+        <h3 class="text-sm font-extrabold flex items-center gap-2 border-b border-slate-900 pb-3 block text-white">
+            <span class="text-indigo-450">️</span> Custom Prompt Templates (Phase 7)
+        </h3>
+
+        <div class="space-y-4">
+            {% for prompt in templates %}
+            <div class="p-5 rounded-2xl border border-slate-900 bg-slate-900/10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:border-slate-800 transition-all text-xs font-semibold">
+                <div class="text-left space-y-2 font-semibold">
+                    <div>
+                        <span class="px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-mono text-[9.5px] uppercase tracking-wider">
+                            ACTIVE PROMPT REPOSITORY
+                        </span>
+                        <h4 class="text-sm font-black text-white mt-1.5 leading-none">{{ prompt.name }}</h4>
+                        <p class="text-[9.5px] font-mono text-slate-500 mt-1 leading-none">Last revised: {{ prompt.updated_at|date:"Y-m-d H:i" }}</p>
+                    </div>
+
+                    <!-- Brief stats preview -->
+                    <div class="flex items-center gap-2.5 font-mono text-[10px]">
+                        <span class="text-slate-400">Claims Version: <span class="text-white">v{{ prompt.version }}</span></span>
+                        <span class="text-slate-450">•</span>
+                        {% if prompt.is_active %}
+                        <span class="text-emerald-500 font-bold uppercase">● Dynamic Active</span>
+                        {% else %}
+                        <span class="text-slate-600 font-bold uppercase">○ Passive Hold</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="shrink-0">
+                    <a href="{% url 'ai:prompt_edit' prompt.id %}" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white transition-all shadow-md shadow-indigo-600/10 cursor-pointer inline-block">
+                        Customize Template Parameters
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-10 text-slate-500 italic block">
+                No custom templates captured in relational databases models.
+            </div>
+            {% endfor %}
+        </div>
+    </ol>
+</div>
+{% endblock %}

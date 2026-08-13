@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire Admin | Placement Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in text-left">
+    <!-- Header title -->
+    <div class="space-y-1.5 border-b border-slate-900 pb-4">
+        <h1 class="text-xl sm:text-2xl font-black font-display text-white">
+            Placement Analytics Dashboard
+        </h1>
+        <p class="text-xs text-slate-400">Live placement insights by batch, branch, company, and candidate readiness.</p>
+    </div>
+
+    <!-- Bento Grid Cards (Core Stats) -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <!-- Candidates Card -->
+        <div class="bg-indigo-950/10 border border-indigo-900/40 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-400">Candidates</span>
+                <span class="text-lg">🎓</span>
+            </div>
+            <div class="space-y-1">
+                <div class="text-3xl font-black font-display text-white">{{ total_students }}</div>
+                <p class="text-[10px] text-slate-500 leading-normal">Total registered trainees</p>
+            </div>
+        </div>
+
+        <!-- Placement Rate Card -->
+        <div class="bg-emerald-950/10 border border-emerald-900/40 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400">Placement Rate</span>
+                <span class="text-lg">📈</span>
+            </div>
+            <div class="space-y-1">
+                <div class="text-3xl font-black font-display text-white">{{ placement_rate }}%</div>
+                <p class="text-[10px] text-slate-500 leading-normal">Overall placements vs registered trainees</p>
+            </div>
+        </div>
+
+        <!-- Average CGPA Card -->
+        <div class="bg-amber-950/10 border border-amber-900/40 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-500">Average CGPA</span>
+                <span class="text-lg">⭐</span>
+            </div>
+            <div class="space-y-1">
+                <div class="text-3xl font-black font-display text-white">{{ avg_cgpa }}</div>
+                <p class="text-[10px] text-slate-500 leading-normal">Mean CGPA for candidate pool</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left: Placements by Branch (Horizontal bars) -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 space-y-6">
+            <div>
+                <h3 class="text-sm font-black font-display text-white">Placements by Branch</h3>
+                <p class="text-[10px] text-slate-500">Placed candidates count mapped by branch</p>
+            </div>
+
+            <div class="space-y-4 bg-slate-950/40 p-5 rounded-2xl border border-slate-900/60">
+                {% if branch_placements %}
+                    {% for item in branch_placements %}
+                    <div class="space-y-1">
+                        <div class="flex items-center justify-between text-xs font-semibold text-slate-400">
+                            <span class="text-slate-200">{{ item.branch|truncatechars:20 }}</span>
+                            <span class="font-mono text-indigo-400 font-bold bg-indigo-500/5 border border-indigo-500/10 px-1.5 py-0.5 rounded">{{ item.count }} placed</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-900">
+                            <div class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: {% widthratio item.count max_branch_count 100 %}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-xs text-slate-500 text-center py-8">No branch placements recorded.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Middle: Placements by Batch (Pie Chart Layout) -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 space-y-6">
+            <div>
+                <h3 class="text-sm font-black font-display text-white">Placements by Batch</h3>
+                <p class="text-[10px] text-slate-500">Placed candidates distribution across batches</p>
+            </div>
+
+            <div class="flex flex-col items-center gap-6 bg-slate-950/20 border border-slate-900/40 p-5 rounded-2xl min-h-[220px] justify-center">
+                <!-- Pie Chart circle -->
+                <div class="flex items-center justify-center shrink-0 w-28 h-28 rounded-full border border-slate-900 shadow-xl" style="{{ batch_conic_style }}">
+                    <!-- Conic gradient pie chart -->
+                </div>
+
+                <!-- Legend batch codes -->
+                <div class="w-full space-y-2 text-xs max-h-24 overflow-y-auto pr-1">
+                    {% if batch_placements %}
+                        {% for batch in batch_placements %}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {{ batch.color }}"></span>
+                                <span>{{ batch.batch_code }}</span>
+                            </div>
+                            <span class="font-mono text-[10px] text-slate-350 font-bold bg-slate-900/70 border border-slate-800 px-2 py-0.5 rounded-md min-w-[20px] text-center">{{ batch.count }}</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-xs text-slate-500 text-center">No batch placements recorded.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Top Hiring Companies (Vertical Column Chart) -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 space-y-6">
+            <div>
+                <h3 class="text-sm font-black font-display text-white">Top Hiring Companies</h3>
+                <p class="text-[10px] text-slate-500">Leading corporate recruiter hiring segments</p>
+            </div>
+
+            <div class="h-56 w-full border border-slate-900/60 bg-slate-950/40 rounded-2xl p-6 flex items-end justify-around gap-2">
+                {% if company_placements %}
+                    {% for comp in company_placements %}
+                    <div class="flex flex-col items-center gap-2 h-full justify-end w-12">
+                        <!-- Numeric indicator -->
+                        <span class="text-[9px] font-mono font-bold text-amber-400 bg-amber-500/5 px-1.5 py-0.5 rounded border border-amber-500/10">{{ comp.count }}</span>
+                        <!-- Vertical bar -->
+                        <div class="w-full bg-gradient-to-t from-amber-600 to-amber-400 rounded-t-md transition-all duration-500" style="height: {% widthratio comp.count max_company_count 60 %}%"></div>
+                        <!-- Company label -->
+                        <span class="text-[8px] font-sans font-semibold text-slate-400 mt-1 text-center truncate max-w-full" title="{{ comp.company }}">{{ comp.company }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-xs text-slate-500 text-center py-8">No companies hired yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Active operational counters -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Current Active Metrics -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 space-y-4">
+            <div>
+                <h3 class="text-sm font-black font-display text-white">Current Active Metrics</h3>
+                <p class="text-[10px] text-slate-500">Live system parameters monitor</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-slate-950/40 border border-slate-900/60 p-4 rounded-xl flex items-center justify-between">
+                    <span class="text-xs text-slate-400">Total partners</span>
+                    <span class="font-mono text-sm font-bold text-white">{{ total_partners }}</span>
+                </div>
+                <div class="bg-slate-950/40 border border-slate-900/60 p-4 rounded-xl flex items-center justify-between">
+                    <span class="text-xs text-slate-400">Open vacancies</span>
+                    <span class="font-mono text-sm font-bold text-white">{{ open_vacancies }}</span>
+                </div>
+                <div class="bg-slate-950/40 border border-slate-900/60 p-4 rounded-xl flex items-center justify-between">
+                    <span class="text-xs text-slate-400">Total applications</span>
+                    <span class="font-mono text-sm font-bold text-white">{{ total_applications }}</span>
+                </div>
+                <div class="bg-slate-950/40 border border-slate-900/60 p-4 rounded-xl flex items-center justify-between">
+                    <span class="text-xs text-slate-400">Successful placements</span>
+                    <span class="font-mono text-sm font-bold text-indigo-400">{{ successful_placements }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Actions -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 flex flex-col justify-between">
+            <div>
+                <h3 class="text-sm font-black font-display text-white">Report Actions</h3>
+                <p class="text-[10px] text-slate-500">Download system reports and placement audits</p>
+            </div>
+            
+            <div class="space-y-4 mt-6">
+                <!-- We can point this to an export endpoint or custom CSV generator -->
+                <a href="#" onclick="alert('CSV Exporting is initiated! Audit logs being compiled...')" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-650 hover:bg-indigo-700 text-white font-bold text-xs transition-all shadow-lg cursor-pointer">
+                    📥 Export Placed Students CSV
+                </a>
+                <p class="text-[10px] text-slate-500 leading-normal text-center">Download the latest placement audit spreadsheet for reporting and compliance.</p>
+            </div>
+        </div>
+        
+    </div>
+
+</div>
+{% endblock %}

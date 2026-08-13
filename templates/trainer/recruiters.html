@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Recruiter Verification Bench | NextHire{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in text-left">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/40 p-6 rounded-3xl border border-slate-900">
+        <div class="space-y-1">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-indigo-400">Administration Control Desk</span>
+            <h1 class="text-2xl font-black font-display text-white">Recruiter Verification Bench</h1>
+            <p class="text-xs text-slate-400">Review corporate recruiter profile submissions, verify enterprise credentials, and approve or reject recruitment access.</p>
+        </div>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="bg-slate-900/20 border border-slate-900 p-5 rounded-2xl">
+        <form method="get" class="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <!-- Search bar -->
+            <div class="relative w-full md:max-w-md">
+                <input type="text" name="q" value="{{ search_q }}" placeholder="Search by company name, contact email..." 
+                       class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 pr-10 text-xs text-slate-100 placeholder-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all">
+                <button type="submit" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+                   
+                </button>
+            </div>
+
+            <!-- Status filter buttons -->
+            <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                <a href="?q={{ search_q }}&status=" 
+                   class="px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all {% if not status_filter %}bg-indigo-650/10 border-indigo-500/60 text-indigo-400{% else %}bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200{% endif %}">
+                    All
+                </a>
+                <a href="?q={{ search_q }}&status=pending" 
+                   class="px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all {% if status_filter == 'pending' %}bg-amber-500/10 border-amber-500/60 text-amber-400{% else %}bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200{% endif %}">
+                    Pending Verification
+                </a>
+                <a href="?q={{ search_q }}&status=approved" 
+                   class="px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all {% if status_filter == 'approved' %}bg-emerald-500/10 border-emerald-500/60 text-emerald-400{% else %}bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200{% endif %}">
+                    Approved
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Recruiter Cards List -->
+    <div class="space-y-6">
+        {% if recruiters %}
+            {% for recruiter in recruiters %}
+            <div class="bg-slate-900/15 border border-slate-900 rounded-3xl p-6 transition-all hover:border-slate-850">
+                <div class="flex flex-col lg:flex-row gap-6 justify-between">
+                    <!-- Left: Profile Details -->
+                    <div class="flex gap-4">
+                        <!-- Profile Image placeholder -->
+                        <div class="w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-sm font-mono font-bold text-emerald-400 uppercase shrink-0">
+                            {{ recruiter.company_name|slice:":2" }}
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-sm font-bold text-white">{{ recruiter.company_name }}</h3>
+                                
+                                <!-- Status Badge -->
+                                {% if recruiter.is_approved_by_admin %}
+                                    <span class="text-[9px] font-mono font-bold text-emerald-400 bg-emerald-950/30 border border-emerald-900/60 px-2 py-0.5 rounded-full">APPROVED</span>
+                                {% else %}
+                                    <span class="text-[9px] font-mono font-bold text-amber-400 bg-amber-950/30 border border-amber-900/60 px-2 py-0.5 rounded-full">PENDING</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs text-slate-500 font-mono">{{ recruiter.contact_email }}</p>
+                            
+                            <div class="flex flex-wrap gap-x-4 gap-y-1.5 pt-2 text-[11px] text-slate-400">
+                                <span>Domain: <strong class="text-slate-200">{{ recruiter.industry_domain }}</strong></span>
+                                {% if recruiter.company_website %}
+                                    <span class="text-slate-800">|</span>
+                                    <span>Website: <a href="{{ recruiter.company_website }}" target="_blank" class="text-indigo-400 hover:underline font-mono">{{ recruiter.company_website }} &nearr;</a></span>
+                                {% endif %}
+                            </div>
+
+                            <p class="text-xs text-slate-400 pt-2 leading-relaxed max-w-2xl">{{ recruiter.about_company|default:"No description shared by recruiter profile." }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Right: Actions Box -->
+                    <div class="flex items-center lg:justify-end gap-3 shrink-0 pt-4 lg:pt-0 border-t border-slate-900 lg:border-t-0">
+                        {% if not recruiter.is_approved_by_admin %}
+                            <form method="post" action="{% url 'trainer:approve_recruiter' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="recruiter_id" value="{{ recruiter.id }}">
+                                <input type="hidden" name="action" value="approve">
+                                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-550 text-white text-xs font-bold rounded-xl transition-all cursor-pointer">
+                                    Approve Profile
+                                </button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{% url 'trainer:approve_recruiter' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="recruiter_id" value="{{ recruiter.id }}">
+                                <input type="hidden" name="action" value="reject">
+                                <button type="submit" class="px-4 py-2 bg-rose-650 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer" onclick="return confirm('Revoke recruiter approval?')">
+                                    Disapprove Recruiter
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-12 text-center text-slate-500 font-mono">
+                No recruiter registers found matching your filters.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

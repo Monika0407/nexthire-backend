@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire Admin | Application Monitoring{% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in text-left">
+    <!-- Header banner -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-900 pb-5">
+        <div class="space-y-1">
+            <h1 class="text-xl sm:text-2xl font-black font-display text-white">
+                Application Monitoring Pipeline
+            </h1>
+            <p class="text-xs text-slate-400">Monitor trainee applications, track recruitment pipeline progression, and analyze screening scores across all job postings.</p>
+        </div>
+
+        <!-- Filter Dropdown -->
+        <div class="flex items-center gap-2">
+            <label for="status-filter" class="text-xs text-slate-450 font-mono">Filter Status:</label>
+            <select 
+                id="status-filter" 
+                onchange="location = this.value;" 
+                class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 w-52"
+            >
+                <option value="?status=" {% if not status_filter %}selected{% endif %}>All Statuses</option>
+                {% for choice_val, choice_lbl in status_choices %}
+                    <option value="?status={{ choice_val }}" {% if status_filter == choice_val %}selected{% endif %}>{{ choice_lbl }} ({{ choice_val }})</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Stats summary helper badges -->
+    <div class="flex flex-wrap gap-2 text-[10px] font-mono">
+        <a href="?status=" class="px-2.5 py-1 rounded border {% if not status_filter %}bg-indigo-600/10 border-indigo-500 text-indigo-400 font-bold{% else %}bg-slate-950/40 border-slate-900 text-slate-500 hover:text-white{% endif %}">
+            ALL ({{ applications.count }})
+        </a>
+        {% for choice_val, choice_lbl in status_choices %}
+            <a href="?status={{ choice_val }}" class="px-2.5 py-1 rounded border {% if status_filter == choice_val %}bg-indigo-600/10 border-indigo-500 text-indigo-400 font-bold{% else %}bg-slate-950/40 border-slate-900 text-slate-500 hover:text-white{% endif %}">
+                {{ choice_val }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- Applications Table List -->
+    <div class="bg-slate-900/10 border border-slate-900 rounded-3xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="border-b border-slate-900 text-slate-500 font-mono bg-slate-950/40">
+                        <th class="p-4 font-bold">Candidate Trainee</th>
+                        <th class="p-4 font-bold">Target Vacancy</th>
+                        <th class="p-4 font-bold">Screening Score</th>
+                        <th class="p-4 font-bold">Applied Timestamp</th>
+                        <th class="p-4 font-bold">Current Pipeline Status</th>
+                        <th class="p-4 font-bold text-right">Trainee Details Link</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-900/60">
+                    {% for app in applications %}
+                        <tr class="hover:bg-slate-900/15">
+                            <td class="p-4">
+                                <div class="space-y-0.5">
+                                    <span class="font-bold text-slate-100 block">{{ app.trainee.user.get_full_name|default:app.trainee.user.email }}</span>
+                                    <span class="text-[10px] text-slate-500 block font-mono">{{ app.trainee.batch_code }}</span>
+                                </div>
+                            </td>
+                            <td class="p-4">
+                                <div class="space-y-0.5">
+                                    <span class="font-bold text-slate-200 block">{{ app.job.title }}</span>
+                                    <span class="text-[10px] text-indigo-400 block font-semibold">{{ app.job.recruiter.company_name }}</span>
+                                </div>
+                            </td>
+                            <td class="p-4">
+                                <div class="flex items-center gap-2">
+                                    <!-- Score bar -->
+                                    <div class="w-16 bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-900">
+                                        <div class="h-full rounded-full 
+                                            {% if app.screener_score >= 80 %}bg-emerald-500
+                                            {% elif app.screener_score >= 60 %}bg-indigo-500
+                                            {% else %}bg-amber-500{% endif %}" 
+                                            style="width: {{ app.screener_score }}%;">
+                                        </div>
+                                    </div>
+                                    <span class="font-mono font-bold 
+                                        {% if app.screener_score >= 80 %}text-emerald-400
+                                        {% elif app.screener_score >= 60 %}text-indigo-400
+                                        {% else %}text-amber-400{% endif %}">
+                                        {{ app.screener_score }}/100
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="p-4 font-mono text-slate-400">{{ app.applied_at|date:"M d, Y H:i" }}</td>
+                            <td class="p-4">
+                                <span class="px-2.5 py-1 rounded border text-[9.5px] font-mono uppercase font-bold
+                                    {% if app.status == 'PENDING' %}bg-blue-500/10 border-blue-500/20 text-blue-400
+                                    {% elif app.status == 'SHORTLISTED' %}bg-cyan-500/10 border-cyan-500/20 text-cyan-400
+                                    {% elif app.status == 'TESTING' %}bg-indigo-500/10 border-indigo-500/20 text-indigo-400
+                                    {% elif app.status == 'INTERVIEWING' %}bg-amber-500/10 border-amber-500/20 text-amber-450
+                                    {% elif app.status == 'OFFER_EXTENDED' or app.status == 'OFFER_ACCEPTED' %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                                    {% else %}bg-rose-500/10 border-rose-500/20 text-rose-400{% endif %}">
+                                    {{ app.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="p-4 text-right">
+                                <a href="{% url 'admin_custom:trainees' %}?detail={{ app.trainee.id }}" class="px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-350 text-[10.5px] font-semibold transition-all">
+                                    View Student
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="6" class="p-12 text-center text-slate-500 font-mono">No matching job applications monitored.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

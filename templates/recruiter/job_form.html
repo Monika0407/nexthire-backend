@@ -1,0 +1,153 @@
+<!-- templates/recruiters/job_form.html -->
+{% extends "base.html" %}
+
+{% block title %}NextHire | {{ action_title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6 animate-fade-in">
+    <!-- Header title -->
+    <div class="space-y-1.5 border-b border-slate-900 pb-4 text-left">
+        <h1 class="text-xl sm:text-2xl font-black font-display text-white flex items-center gap-2">
+            {{ action_title }}
+        </h1>
+        <p class="text-xs text-slate-400">Configure position details, specify eligibility CGPA scales, list technical skillsets checklists, and outline deadlines parameters.</p>
+    </div>
+
+    <!-- Forms Workspace -->
+    <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 sm:p-8">
+        <form method="POST" class="space-y-6 text-left">
+            {% csrf_token %}
+
+            <!-- Core Specs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-350">Job Role Title <span class="text-rose-500">*</span></label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <p class="text-[10px] text-red-400">{{ form.title.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-350">Job Type Designation <span class="text-rose-500">*</span></label>
+                    {{ form.job_type }}
+                    {% if form.job_type.errors %}
+                        <p class="text-[10px] text-red-400">{{ form.job_type.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Geography & Remunerations -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-350">Location Coordinates <span class="text-rose-500">*</span></label>
+                    {{ form.location }}
+                    {% if form.location.errors %}
+                        <p class="text-[10px] text-red-400">{{ form.location.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-350">Salary Package / Annual CTC (e.g., 14 LPA) <span class="text-rose-500">*</span></label>
+                    {{ form.salary_package }}
+                    {% if form.salary_package.errors %}
+                        <p class="text-[10px] text-red-400">{{ form.salary_package.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <style>
+                #thresholds-section input {
+                    width: 100% !important;
+                }
+            </style>
+
+            <!-- Professional & Academic thresholds -->
+            <div id="thresholds-section" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="space-y-1.5 flex flex-col justify-end">
+                    <div class="md:min-h-[36px] flex items-end pb-1">
+                        <label class="text-xs font-semibold text-slate-350">Minimum CGPA Required <span class="text-rose-500">*</span></label>
+                    </div>
+                    {{ form.min_cgpa_required }}
+                    {% if form.min_cgpa_required.errors %}
+                        <p class="text-[10px] text-red-400">{{ form.min_cgpa_required.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+                <div class="space-y-1.5 flex flex-col justify-end">
+                    <div class="md:min-h-[36px] flex items-end pb-1">
+                        <label class="text-xs font-semibold text-slate-350">Experience Required (Years) <span class="text-rose-500">*</span></label>
+                    </div>
+                    {{ form.experience_required }}
+                    {% if form.experience_required.errors %}
+                        <p class="text-[10px] text-red-400">{{ form.experience_required.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+                <div class="space-y-1.5 flex flex-col justify-end">
+                    <div class="md:min-h-[36px] flex items-end pb-1">
+                        <label class="text-xs font-semibold text-slate-350">Registration Deadline <span class="text-rose-500">*</span></label>
+                    </div>
+                    {{ form.application_deadline }}
+                    {% if form.application_deadline.errors %}
+                        <p class="text-[10px] text-red-400">{{ form.application_deadline.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Skills requirements tags list -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-350">Mandatory Technical Skills (separate with commas) <span class="text-rose-500">*</span></label>
+                {{ form.raw_skills }}
+                <p class="text-[9.5px] text-slate-500 font-sans">e.g. Python, Django, MySQL, React, AWS Cloud (our automated parser matches candidate tags matching these inputs).</p>
+                {% if form.raw_skills.errors %}
+                    <p class="text-[10px] text-red-400">{{ form.raw_skills.errors.as_text }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-350">Detailed Role and Responsibilities Criteria <span class="text-rose-500">*</span></label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <p class="text-[10px] text-red-400">{{ form.description.errors.as_text }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Eligible Courses Checkboxes -->
+            <div class="space-y-2 bg-slate-950/20 p-5 rounded-2xl border border-slate-900">
+                <label class="text-xs font-bold text-slate-350 block">Target Eligible Courses <span class="text-rose-500">*</span></label>
+                <p class="text-[9.5px] text-slate-500 mb-3">Select the courses allowed to apply for this job. Only trainees from these courses can apply, and only trainers assigned to these courses can recommend candidates.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {% for checkbox in form.required_courses %}
+                        <div class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900 border border-slate-800/80 hover:bg-slate-850/50 transition-colors">
+                            {{ checkbox.tag }}
+                            <label for="{{ checkbox.id_for_label }}" class="text-xs font-medium text-slate-300 cursor-pointer select-none">
+                                {{ checkbox.choice_label }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% if form.required_courses.errors %}
+                    <p class="text-[10px] text-red-400 mt-1">{{ form.required_courses.errors.as_text }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Checkbox toggles -->
+            <div class="flex items-center gap-2 bg-slate-950/40 p-4 rounded-2xl border border-slate-900">
+                {{ form.is_active }}
+                <div class="text-left font-sans">
+                    <label class="text-xs font-bold text-slate-200 cursor-pointer" for="id_is_active">Publish and Activate Instantly</label>
+                    <p class="text-[10px] text-slate-500">Uncheck to cache vacancy specs offline as draft without showing in trainee lists.</p>
+                </div>
+            </div>
+
+            <!-- Actions button -->
+            <div class="pt-4 border-t border-slate-900/60 flex items-center justify-end gap-3 mt-4">
+                <a href="{% url 'recruiters:dashboard' %}" class="px-5 py-3 rounded-xl border border-slate-800 hover:bg-slate-900 text-xs text-slate-400 font-semibold cursor-pointer transition-all">
+                    Cancel and Return
+                </a>
+                <button type="submit" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold font-display cursor-pointer transition-all shadow-lg shadow-indigo-600/15">
+                    Publish Position Details
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

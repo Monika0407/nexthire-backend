@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire Admin | Dashboard Control Room{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in text-left">
+    <!-- Header banner -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-slate-900/40 p-6 rounded-3xl border border-slate-900">
+        <div class="space-y-1">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-indigo-400">Platform Control System</span>
+            <h1 class="text-2xl sm:text-3xl font-black font-display tracking-tight text-white">
+                Admin Control Room
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400">
+                Monitor system metrics, manage candidate trainee access, approve corporate recruiters, edit job specs, and track reports.
+            </p>
+        </div>
+        <div class="shrink-0">
+            <a href="{% url 'admin_custom:analytics' %}" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all shadow-lg cursor-pointer whitespace-nowrap">
+                View Placement Analytics
+            </a>
+        </div>
+    </div>
+
+    <!-- Metrics Cards Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <!-- Trainees -->
+        <a href="?tab=student_report" class="bg-slate-900/10 border border-slate-900 hover:border-slate-800 p-5 rounded-2xl block transition-all hover:bg-slate-950/40">
+            <span class="text-[10px] font-mono font-bold text-slate-500 uppercase block">Total Trainees</span>
+            <span class="text-2xl font-black text-white block mt-2 font-display">{{ total_students }}</span>
+        </a>
+        <!-- Recruiters -->
+        <a href="?tab=recruiter_report" class="bg-slate-900/10 border border-slate-900 hover:border-slate-800 p-5 rounded-2xl block transition-all hover:bg-slate-950/40">
+            <span class="text-[10px] font-mono font-bold text-slate-500 uppercase block">Total Recruiters</span>
+            <span class="text-2xl font-black text-white block mt-2 font-display">{{ total_recruiters }}</span>
+        </a>
+        <!-- Jobs -->
+        <a href="?tab=job_report" class="bg-slate-900/10 border border-slate-900 hover:border-slate-800 p-5 rounded-2xl block transition-all hover:bg-slate-950/40">
+            <span class="text-[10px] font-mono font-bold text-slate-500 uppercase block">Total Jobs</span>
+            <span class="text-2xl font-black text-white block mt-2 font-display">{{ total_jobs }}</span>
+        </a>
+        <!-- Applications -->
+        <a href="?tab=application_report" class="bg-slate-900/10 border border-slate-900 hover:border-slate-800 p-5 rounded-2xl block transition-all hover:bg-slate-950/40">
+            <span class="text-[10px] font-mono font-bold text-slate-500 uppercase block">Applications</span>
+            <span class="text-2xl font-black text-white block mt-2 font-display">{{ total_applications }}</span>
+        </a>
+        <!-- Interviews -->
+        <a href="?tab=application_report" class="bg-slate-900/10 border border-slate-900 hover:border-slate-800 p-5 rounded-2xl block transition-all hover:bg-slate-950/40">
+            <span class="text-[10px] font-mono font-bold text-slate-500 uppercase block">Interviews</span>
+            <span class="text-2xl font-black text-white block mt-2 font-display">{{ total_interviews }}</span>
+        </a>
+        <!-- Placements -->
+        <a href="?tab=placement_report" class="bg-slate-900/10 border border-slate-900 p-5 rounded-2xl bg-indigo-950/5 border-indigo-900/20 hover:border-indigo-850 block transition-all hover:bg-indigo-950/15">
+            <span class="text-[10px] font-mono font-bold text-indigo-400 uppercase block">Total Placements</span>
+            <span class="text-2xl font-black text-indigo-400 block mt-2 font-display">{{ total_placements }}</span>
+        </a>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex flex-wrap items-center gap-4 border-b border-slate-900 pb-2.5">
+        <a href="?tab=overview" class="text-sm font-bold pb-2 px-1 transition-all border-b-2 {% if active_tab == 'overview' or not active_tab %}text-indigo-400 border-indigo-500{% else %}text-slate-500 border-transparent hover:text-white{% endif %}">
+            System Overview
+        </a>
+        <a href="?tab=student_report" class="text-sm font-bold pb-2 px-1 transition-all border-b-2 {% if active_tab == 'student_report' %}text-indigo-400 border-indigo-500{% else %}text-slate-500 border-transparent hover:text-white{% endif %}">
+            Student Report
+        </a>
+        <a href="?tab=recruiter_report" class="text-sm font-bold pb-2 px-1 transition-all border-b-2 {% if active_tab == 'recruiter_report' %}text-indigo-400 border-indigo-500{% else %}text-slate-500 border-transparent hover:text-white{% endif %}">
+            Recruiter Report
+        </a>
+        <a href="?tab=job_report" class="text-sm font-bold pb-2 px-1 transition-all border-b-2 {% if active_tab == 'job_report' %}text-indigo-400 border-indigo-500{% else %}text-slate-500 border-transparent hover:text-white{% endif %}">
+            Job Report
+        </a>
+        <a href="?tab=application_report" class="text-sm font-bold pb-2 px-1 transition-all border-b-2 {% if active_tab == 'application_report' %}text-indigo-400 border-indigo-500{% else %}text-slate-500 border-transparent hover:text-white{% endif %}">
+            Application Report
+        </a>
+        <a href="?tab=placement_report" class="text-sm font-bold pb-2 px-1 transition-all border-b-2 {% if active_tab == 'placement_report' %}text-indigo-400 border-indigo-500{% else %}text-slate-500 border-transparent hover:text-white{% endif %}">
+            Placement Report
+        </a>
+    </div>
+
+    <!-- Active Tab Content -->
+    {% if active_tab == 'overview' or not active_tab %}
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left: Recent Registrations & Applications (colSpan: 8) -->
+            <div class="lg:col-span-8 space-y-6">
+                <!-- Recent Registrations -->
+                <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 space-y-4">
+                    <h3 class="text-sm font-black font-display text-white uppercase tracking-wider">Recent Registrations</h3>
+                    <div class="divide-y divide-slate-900/60 text-xs">
+                        {% for user in recent_registrations %}
+                            <div class="py-3 flex items-center justify-between">
+                                <div class="space-y-0.5">
+                                    <p class="font-bold text-slate-200">{{ user.email }}</p>
+                                    <p class="text-[10px] text-slate-500">Joined {{ user.date_joined|date:"M d, Y" }}</p>
+                                </div>
+                                <span class="px-2 py-0.5 rounded text-[9.5px] font-mono border uppercase
+                                    {% if user.role == 'trainee' %}bg-blue-500/10 border-blue-500/20 text-blue-400
+                                    {% elif user.role == 'recruiter' %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                                    {% else %}bg-purple-500/10 border-purple-500/20 text-purple-400{% endif %}">
+                                    {{ user.role }}
+                                </span>
+                            </div>
+                        {% empty %}
+                            <p class="text-slate-500 italic py-4">No recent signups detected.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Recent Applications -->
+                <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 space-y-4">
+                    <h3 class="text-sm font-black font-display text-white uppercase tracking-wider">Recent Applications</h3>
+                    <div class="divide-y divide-slate-900/60 text-xs">
+                        {% for app in recent_applications %}
+                            <div class="py-3 flex items-center justify-between">
+                                <div class="space-y-0.5">
+                                    <p class="font-bold text-slate-200">{{ app.trainee.user.get_full_name|default:app.trainee.user.email }}{{ app.job.title }}</p>
+                                    <p class="text-[10px] text-slate-550">Applied {{ app.applied_at|date:"M d, Y" }}</p>
+                                </div>
+                                <span class="px-2 py-0.5 rounded text-[9.5px] font-mono border uppercase
+                                    {% if app.status == 'PENDING' %}bg-blue-500/10 border-blue-500/20 text-blue-400
+                                    {% elif app.status == 'SHORTLISTED' %}bg-cyan-500/10 border-cyan-500/20 text-cyan-400
+                                    {% elif app.status == 'INTERVIEWING' %}bg-amber-500/10 border-amber-500/20 text-amber-400
+                                    {% elif app.status == 'OFFER_ACCEPTED' %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                                    {% else %}bg-rose-500/10 border-rose-500/20 text-rose-400{% endif %}">
+                                    {{ app.get_status_display }}
+                                </span>
+                            </div>
+                        {% empty %}
+                            <p class="text-slate-500 italic py-4">No recent applications filed.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Recent Jobs (colSpan: 4) -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 space-y-4">
+                    <h3 class="text-sm font-black font-display text-white uppercase tracking-wider">Recent Jobs</h3>
+                    <div class="divide-y divide-slate-900/60 text-xs">
+                        {% for job in recent_jobs %}
+                            <div class="py-3.5 space-y-1">
+                                <span class="font-bold text-slate-200 block truncate">{{ job.title }}</span>
+                                <span class="text-[10px] text-indigo-400 block">{{ job.recruiter.company_name }}</span>
+                                <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1">
+                                    <span>{{ job.location }}</span>
+                                    <span>{{ job.salary_package }}</span>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-slate-500 italic py-4">No recent job openings published.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% elif active_tab == 'student_report' %}
+        <!-- Student Report View -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl overflow-hidden shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-900 text-slate-500 font-mono bg-slate-950/40">
+                            <th class="p-4 font-bold">Student Candidate</th>
+                            <th class="p-4 font-bold">Batch Code</th>
+                            <th class="p-4 font-bold">Degree & Branch</th>
+                            <th class="p-4 font-bold">CGPA</th>
+                            <th class="p-4 font-bold">Verification</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-900/60">
+                        {% for trainee in student_report %}
+                            <tr class="hover:bg-slate-900/15">
+                                <td class="p-4 font-bold text-slate-100">{{ trainee.user.get_full_name|default:trainee.user.email }}</td>
+                                <td class="p-4 font-mono text-slate-300">{{ trainee.batch_code }}</td>
+                                <td class="p-4 text-slate-350">{{ trainee.degree }} ({{ trainee.branch }})</td>
+                                <td class="p-4 font-bold text-indigo-400 font-mono">{{ trainee.cgpa }}</td>
+                                <td class="p-4">
+                                    <span class="px-2 py-0.5 rounded text-[9.5px] border uppercase
+                                        {% if trainee.user.is_active %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                                        {% else %}bg-rose-500/10 border-rose-500/20 text-rose-455{% endif %}">
+                                        {{ trainee.user.is_active|yesno:"Active,Inactive" }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="p-12 text-center text-slate-500">No registered trainees found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    {% elif active_tab == 'recruiter_report' %}
+        <!-- Recruiter Report View -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl overflow-hidden shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-900 text-slate-500 font-mono bg-slate-950/40">
+                            <th class="p-4 font-bold">Company Name</th>
+                            <th class="p-4 font-bold">Contact Email</th>
+                            <th class="p-4 font-bold">Industry Domain</th>
+                            <th class="p-4 font-bold">Website</th>
+                            <th class="p-4 font-bold">Approval Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-900/60">
+                        {% for recruiter in recruiter_report %}
+                            <tr class="hover:bg-slate-900/15">
+                                <td class="p-4 font-bold text-slate-100">{{ recruiter.company_name }}</td>
+                                <td class="p-4 text-slate-300">{{ recruiter.contact_email }}</td>
+                                <td class="p-4 text-slate-350">{{ recruiter.industry_domain }}</td>
+                                <td class="p-4 font-mono text-indigo-400">
+                                    {% if recruiter.company_website %}
+                                        <a href="{{ recruiter.company_website }}" target="_blank" class="hover:underline">{{ recruiter.company_website }}</a>
+                                    {% else %}-{% endif %}
+                                </td>
+                                <td class="p-4">
+                                    <span class="px-2 py-0.5 rounded text-[9.5px] border uppercase
+                                        {% if recruiter.is_approved_by_admin %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                                        {% else %}bg-rose-500/10 border-rose-500/20 text-rose-455{% endif %}">
+                                        {{ recruiter.is_approved_by_admin|yesno:"Approved,Awaiting Approval" }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="p-12 text-center text-slate-500">No recruiters found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    {% elif active_tab == 'job_report' %}
+        <!-- Job Report View -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl overflow-hidden shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-900 text-slate-500 font-mono bg-slate-950/40">
+                            <th class="p-4 font-bold">Job Title</th>
+                            <th class="p-4 font-bold">Recruiter Company</th>
+                            <th class="p-4 font-bold">Location</th>
+                            <th class="p-4 font-bold">Salary Package</th>
+                            <th class="p-4 font-bold">Required Courses</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-900/60">
+                        {% for job in job_report %}
+                            <tr class="hover:bg-slate-900/15">
+                                <td class="p-4 font-bold text-slate-100">{{ job.title }}</td>
+                                <td class="p-4 text-slate-300 font-medium">{{ job.recruiter.company_name }}</td>
+                                <td class="p-4 text-slate-400">{{ job.location }}</td>
+                                <td class="p-4 font-mono font-bold text-indigo-400">{{ job.salary_package }}</td>
+                                <td class="p-4">
+                                    <div class="flex flex-wrap gap-1">
+                                        {% for course in job.required_courses.all %}
+                                            <span class="px-2 py-0.5 rounded text-[9px] font-mono bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                                                {{ course.name }}
+                                            </span>
+                                        {% empty %}
+                                            <span class="text-slate-500 italic text-[9px]">None specified</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="p-12 text-center text-slate-500">No job openings found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    {% elif active_tab == 'application_report' %}
+        <!-- Application Report View -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl overflow-hidden shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-900 text-slate-500 font-mono bg-slate-950/40">
+                            <th class="p-4 font-bold">Student Candidate</th>
+                            <th class="p-4 font-bold">Job Vacancy</th>
+                            <th class="p-4 font-bold">Recruiter</th>
+                            <th class="p-4 font-bold">Applied Date</th>
+                            <th class="p-4 font-bold">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-900/60">
+                        {% for app in application_report %}
+                            <tr class="hover:bg-slate-900/15">
+                                <td class="p-4 font-bold text-slate-100">{{ app.trainee.user.get_full_name|default:app.trainee.user.email }}</td>
+                                <td class="p-4 text-slate-300 font-medium">{{ app.job.title }}</td>
+                                <td class="p-4 text-slate-450">{{ app.job.recruiter.company_name }}</td>
+                                <td class="p-4 text-slate-400 font-mono">{{ app.applied_at|date:"M d, Y" }}</td>
+                                <td class="p-4">
+                                    <span class="px-2 py-0.5 rounded text-[9.5px] border uppercase font-mono
+                                        {% if app.status == 'PENDING' %}bg-blue-500/10 border-blue-500/20 text-blue-400
+                                        {% elif app.status == 'SHORTLISTED' %}bg-cyan-500/10 border-cyan-500/20 text-cyan-400
+                                        {% elif app.status == 'INTERVIEWING' %}bg-amber-500/10 border-amber-500/20 text-amber-400
+                                        {% elif app.status == 'OFFER_ACCEPTED' %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                                        {% else %}bg-rose-500/10 border-rose-500/20 text-rose-445{% endif %}">
+                                        {{ app.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="p-12 text-center text-slate-500">No applications filed.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    {% elif active_tab == 'placement_report' %}
+        <!-- Placement Report View -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl overflow-hidden shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-900 text-slate-500 font-mono bg-slate-950/40">
+                            <th class="p-4 font-bold">Placed Student</th>
+                            <th class="p-4 font-bold">Batch Code</th>
+                            <th class="p-4 font-bold">Target Company</th>
+                            <th class="p-4 font-bold">Job Role</th>
+                            <th class="p-4 font-bold">CTC Package</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-900/60">
+                        {% for app in placement_report %}
+                            <tr class="hover:bg-slate-900/15">
+                                <td class="p-4 font-bold text-slate-100">{{ app.trainee.user.get_full_name|default:app.trainee.user.email }}</td>
+                                <td class="p-4 font-mono text-slate-300">{{ app.trainee.batch_code }}</td>
+                                <td class="p-4 text-emerald-400 font-bold">{{ app.job.recruiter.company_name }}</td>
+                                <td class="p-4 text-slate-350">{{ app.job.title }}</td>
+                                <td class="p-4 font-bold text-indigo-400 font-mono">{{ app.job.salary_package }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="p-12 text-center text-slate-500">No verified placements recorded yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

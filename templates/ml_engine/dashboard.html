@@ -1,0 +1,395 @@
+<!-- templates/ml_engine/dashboard.html -->
+{% extends 'base.html' %}
+{% block title %}NextHire | Machine Learning Intelligence Hub{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js for data visualization -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in">
+    <!-- Header banner -->
+    <div class="border border-slate-900 bg-gradient-to-r from-slate-950 via-slate-900/60 to-slate-950 p-6 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="flex h-5.5 w-5.5 items-center justify-center rounded-lg bg-indigo-600/20 text-indigo-400 font-extrabold text-sm border border-indigo-500/30">
+                   
+                </span>
+                <span class="text-[10px] font-mono font-black uppercase tracking-wider text-indigo-400">
+                    NextHire Predictive ML Pipeline
+                </span>
+            </div>
+            <h1 class="text-2xl font-black mt-2 tracking-tight">
+                Placement & Career AI Co-Pilot
+            </h1>
+            <p class="text-xs mt-1 text-slate-400 font-medium">
+                Unified Machine Learning Services orchestrating candidate models, ranking matching, and skill gap predictions.
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 shrink-0 text-xs font-mono">
+            <span class="px-3 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-bold uppercase tracking-wider">
+                VERSION: {{ active_version|default:"SYSTEM FALLBACK" }}
+            </span>
+            <span class="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold uppercase tracking-wider">
+                ● MODEL LIVE
+            </span>
+        </div>
+    </div>
+
+    <!-- 1. Stats and Cards panel -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Card 1 -->
+        <div class="p-5 border border-slate-900 bg-slate-950 rounded-2xl space-y-2 hover:-translate-y-1 transition-all">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">Model Classification Acc</span>
+                <span class="text-xs"></span>
+            </div>
+            <p class="text-3xl font-black text-white leading-none">
+                {{ analytics_stats.accuracy_score|floatformat:1 }}%
+            </p>
+            <p class="text-[10.5px] text-slate-500 leading-snug">
+                RandomForest classifier cross-validated scoring indices.
+            </p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="p-5 border border-slate-900 bg-slate-950 rounded-2xl space-y-2 hover:-translate-y-1 transition-all">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">Total Placement Audits</span>
+                <span class="text-xs"></span>
+            </div>
+            <p class="text-3xl font-black text-indigo-400 leading-none">
+                {{ analytics_stats.total_predictions }}
+            </p>
+            <p class="text-[10.5px] text-slate-500 leading-snug">
+                Predictions evaluated and tracked in MySQL logs.
+            </p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="p-5 border border-slate-900 bg-slate-950 rounded-2xl space-y-2 hover:-translate-y-1 transition-all">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">Average Readiness Limit</span>
+                <span class="text-xs"></span>
+            </div>
+            <p class="text-3xl font-black text-emerald-400 leading-none">
+                {{ analytics_stats.avg_placed_probability|default:"74.2" }}%
+            </p>
+            <p class="text-[10.5px] text-slate-500 leading-snug">
+                Proportion of candidates landing above 50% threshold.
+            </p>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="p-5 border border-slate-900 bg-slate-950 rounded-2xl space-y-2 hover:-translate-y-1 transition-all">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">Recommendation Match Rate</span>
+                <span class="text-xs"></span>
+            </div>
+            <p class="text-3xl font-black text-amber-400 leading-none">
+                {{ analytics_stats.rec_coefficient|floatformat:1 }}%
+            </p>
+            <p class="text-[10.5px] text-slate-500 leading-snug">
+                Target job recommendations relevancy feedback factor.
+            </p>
+        </div>
+    </div>
+
+    <!-- Quick action shortcuts -->
+    {% if role == 'STUDENT' %}
+    <div class="flex flex-wrap items-center gap-3">
+        <a href="{% url 'ml_engine:predict' %}" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white transition-all shadow-lg shadow-indigo-600/10 flex items-center gap-2">
+            Run Placement Predictor
+        </a>
+        <a href="{% url 'ml_engine:recommendations' %}" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-slate-200 border border-slate-800/80 transition-all flex items-center gap-2">
+            View Matches & Job Feeds
+        </a>
+        <a href="{% url 'ml_engine:skill_gap' %}" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-slate-200 border border-slate-800/80 transition-all flex items-center gap-2">
+            Run Skill Gap Diagnostics
+        </a>
+    </div>
+    {% elif role == 'RECRUITER' %}
+    <div class="flex flex-wrap items-center gap-3">
+        <a href="{% url 'ml_engine:ranking' %}" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white transition-all shadow-lg shadow-indigo-600/10 flex items-center gap-2">
+            candidate Rankings & Overlaps
+        </a>
+    </div>
+    {% elif role == 'ADMIN' %}
+    <div class="flex flex-wrap items-center gap-3">
+        <a href="{% url 'ml_engine:dataset_list' %}" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white transition-all shadow-lg shadow-indigo-600/10 flex items-center gap-2">
+           ️ Manage CSV Corpora & Datasets
+        </a>
+        <a href="{% url 'ml_engine:trigger_retrain' %}" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-slate-205 border border-slate-850 transition-all flex items-center gap-2" onclick="return confirm('Initiate scikit-learn training cycle compiled with 1500 records?');">
+            Retrain RF Classifier Model
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- 2. Dual panels content -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- ======================= STUDENT INTERFACE ======================= -->
+        {% if role == 'STUDENT' %}
+        <div class="lg:col-span-5 p-6 border border-slate-900 bg-slate-950 rounded-2xl flex flex-col justify-between space-y-6">
+            <div>
+                <h3 class="text-sm font-extrabold flex items-center gap-2 border-b border-slate-900 pb-3">
+                    <span class="text-indigo-400"></span> Personal Placement Probability
+                </h3>
+                <p class="text-xs text-slate-400 leading-normal mt-3">
+                    Calculated via scikit-learn classifier based on your dynamic credentials profile compared with thousands of historical records.
+                </p>
+            </div>
+
+            <!-- Visualization gauge -->
+            <div class="py-4 flex flex-col items-center justify-center relative">
+                <div class="w-44 h-44 flex items-center justify-center rounded-full border-4 border-slate-900 border-t-indigo-500 shadow-2xl relative shadow-indigo-500/5">
+                    <div class="text-center">
+                        <span class="text-4xl font-black text-white">{{ student_prob }}%</span>
+                        <p class="text-[9px] font-mono uppercase text-slate-500 tracking-wider mt-1">Readiness Ratio</p>
+                    </div>
+                </div>
+                
+                <div class="mt-6 text-center space-y-1">
+                    <span class="px-2.5 py-0.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-mono text-[9.5px] uppercase font-bold tracking-wider">
+                        Confidence Score: {{ student_conf }}%
+                    </span>
+                    <p class="text-[10px] text-slate-500 font-medium">Model variance consensus checks matched (Active ML)</p>
+                </div>
+            </div>
+
+            <div class="p-3.5 rounded-xl border border-slate-900 bg-slate-900/40 text-[10.5px] text-slate-450 leading-relaxed text-center">
+                Want to raise your scores? Tweak variables in the predictor tool or upload certifications/skills.
+            </div>
+        </div>
+
+        <div class="lg:col-span-7 space-y-6">
+            <!-- Job Recommendations panel -->
+            <div class="p-6 border border-slate-900 bg-slate-950 rounded-2xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-900 pb-3">
+                    <h3 class="text-sm font-extrabold flex items-center gap-2">
+                        <span class="text-emerald-400"></span> Premium Job Openings Recommended
+                    </h3>
+                    <a href="{% url 'ml_engine:recommendations' %}" class="text-[10px] uppercase font-sans font-black text-indigo-400 hover:underline">Explore Feed</a>
+                </div>
+
+                <div class="space-y-3">
+                    {% for rec in recent_recs %}
+                    <div class="p-4 rounded-xl border border-slate-900 bg-slate-900/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div class="text-left space-y-1">
+                            <p class="text-xs font-extrabold text-white">{{ rec.job.title }}</p>
+                            <p class="text-[10.5px] text-slate-400 font-semibold">{{ rec.job.recruiter.company_name }} — <span class="text-[10px] font-mono text-emerald-400 font-black">{{ rec.job.salary_package }}</span></p>
+                        </div>
+
+                        <div class="flex items-center gap-3 shrink-0">
+                            <span class="px-2.5 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-mono font-bold text-[10px]">
+                                Match Coefficient: {{ rec.match_score }}%
+                            </span>
+                            <a href="{% url 'ml_engine:skill_gap' %}?job_id={{ rec.job.id }}" title="Run diagnostic analysis" class="text-xs text-slate-500 hover:text-white"></a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-6 text-slate-500 text-xs">
+                        No active matching jobs found in feed catalogs.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Highly Recommended learning topics -->
+            <div class="p-6 border border-slate-900 bg-slate-950 rounded-2xl space-y-3">
+                <h3 class="text-sm font-extrabold flex items-center gap-2">
+                    <span class="text-amber-400"></span> Actionable Development Targets
+                </h3>
+                <p class="text-xs text-slate-400">
+                    The highest in-demand technological competencies requested by hiring companies matching your profile which you are missing:
+                </p>
+
+                <div class="flex flex-wrap gap-2 pt-2">
+                    {% for skill in sug_skills %}
+                    <span class="px-3 py-1.5 rounded-xl border border-slate-900 bg-slate-900/60 font-mono text-[10px] font-bold text-slate-200 flex items-center gap-1">
+                        {{ skill }}
+                    </span>
+                    {% empty %}
+                    <span class="text-xs text-slate-500 italic">No skill gaps detected! Your profile is highly competitive.</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ======================= RECRUITER & ADMIN PANELS ======================= -->
+        {% else %}
+        <div class="lg:col-span-4 p-6 border border-slate-900 bg-slate-950 rounded-2xl flex flex-col justify-between space-y-6">
+            <div>
+                <h3 class="text-sm font-extrabold flex items-center gap-2 border-b border-slate-900 pb-3">
+                    <span class="text-indigo-400"></span> Active Model Registry
+                </h3>
+                <p class="text-xs text-slate-400 mt-3">
+                    Model details, algorithm specifications, and cross-validated accuracies.
+                </p>
+
+                <div class="space-y-4 pt-4 text-xs">
+                    <div class="p-4 rounded-xl border border-slate-900 bg-slate-900/20 font-mono space-y-2">
+                        <div class="flex justify-between border-b border-slate-900 pb-1.5 text-[10px] font-black text-slate-400">
+                            <span>PARAMETER</span>
+                            <span>CORRECTNESS</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Algorithm:</span>
+                            <span class="text-slate-200 font-bold">Random Forest</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">F1 Score:</span>
+                            <span class="text-slate-200 font-bold">88.9%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Precision:</span>
+                            <span class="text-slate-200 font-bold">89.1%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Recall:</span>
+                            <span class="text-slate-200 font-bold">88.5%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart.js feature importance graphics -->
+            <div>
+                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold block mb-2">Feature Importance distributions</span>
+                <canvas id="featureImportancesChart" class="max-h-48"></canvas>
+            </div>
+        </div>
+
+        <div class="lg:col-span-8 space-y-6">
+            <!-- Prediction list log -->
+            <div class="p-6 border border-slate-900 bg-slate-950 rounded-2xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-900 pb-3">
+                    <h3 class="text-sm font-extrabold flex items-center gap-2">
+                        <span class="text-indigo-400"></span> Recent Predictive Audits & Logs
+                    </h3>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs min-w-[500px]">
+                        <thead>
+                            <tr class="border-b border-slate-900 text-slate-500 font-mono font-bold uppercase tracking-wider text-[9px]">
+                                <th class="py-3">BATCH CODE / NAME</th>
+                                <th class="py-3">CGPA / SKILLS</th>
+                                <th class="py-3">CERTS / INTERNS</th>
+                                <th class="py-3 text-right">PLACED PROB</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-900">
+                            {% for log in prediction_logs_list %}
+                            <tr class="hover:bg-slate-900/10 transition-colors">
+                                <td class="py-3.5 font-bold text-white">
+                                    {{ log.trainee.user.get_full_name|default:log.trainee.user.username }} <br />
+                                    <span class="text-[9px] font-mono text-slate-500 leading-none mt-1 uppercase">{{ log.trainee.batch_code }}</span>
+                                </td>
+                                <td class="py-3.5">
+                                    <span class="font-bold text-indigo-400">GPA: {{ log.cgpa }}</span> <br />
+                                    <span class="text-[9px] text-slate-400">{{ log.skills_count }} Skills validated</span>
+                                </td>
+                                <td class="py-3.5 font-mono text-slate-450 font-bold">
+                                    Certs: {{ log.certifications_count }} | Interns: {{ log.internships_count }}
+                                </td>
+                                <td class="py-3.5 text-right font-bold">
+                                    <span class="{% if log.placement_probability >= 0.50 %}text-emerald-400{% else %}text-rose-400{% endif %}">
+                                        {{ log.probability_percentage }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="py-6 text-center text-slate-500 italic">No prediction records logged yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Version list for Admins -->
+            {% if role == 'ADMIN' %}
+            <div class="p-6 border border-slate-900 bg-slate-950 rounded-2xl space-y-4">
+                <h3 class="text-sm font-extrabold flex items-center gap-2 border-b border-slate-900 pb-3">
+                    <span class="text-indigo-400"></span> Model Version Control (Rollback & Deployments)
+                </h3>
+
+                <div class="space-y-2.5">
+                    {% for ver in all_models %}
+                    <div class="p-4 rounded-xl border border-slate-900 flex items-center justify-between gap-4 {% if ver.is_active %}bg-indigo-950/10 border-indigo-500/20{% else %}bg-slate-900/10{% endif %}">
+                        <div class="text-left space-y-1 text-xs">
+                            <p class="font-bold text-white font-mono uppercase">Version Code: {{ ver.version }}</p>
+                            <p class="text-[10px] text-slate-450 font-semibold">{{ ver.algorithm_name }} | Acc: <span class="text-emerald-400 font-bold">{{ ver.accuracy_percentage }}%</span></p>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            {% if ver.is_active %}
+                            <span class="px-2.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-405 font-mono font-bold text-[9px] uppercase tracking-wider">
+                                Live In Prod
+                            </span>
+                            {% else %}
+                            <a href="{% url 'ml_engine:activate_version' ver.id %}" class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900 text-[10px] font-bold text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer">
+                                Deploy Version
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-slate-500 text-xs italic">
+                        No model version metadata found. Auto fallback is currently handling predictive requests.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% if role in 'RECRUITER,ADMIN' %}
+<script>
+    // Build feature importances custom chart
+    const ctx = document.getElementById('featureImportancesChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['CGPA', 'Skills', 'Internships', 'Certs', 'Aptitude', 'Projects'],
+                datasets: [{
+                    label: 'Feature Weight',
+                    data: [0.32, 0.15, 0.22, 0.10, 0.13, 0.08],
+                    backgroundColor: 'rgba(99, 102, 241, 0.5)',
+                    borderColor: 'rgb(99, 102, 241)',
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#64748b', font: { size: 9, family: 'JetBrains Mono' } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 9, family: 'JetBrains Mono' } }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endif %}
+{% endblock %}

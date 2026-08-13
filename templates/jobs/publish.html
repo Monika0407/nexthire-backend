@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire | Publish Opportunity{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6 animate-fade-in">
+    <!-- Header title -->
+    <div class="space-y-1.5 border-b border-slate-900 pb-4 text-left">
+        <h1 class="text-xl sm:text-2xl font-black font-display text-white flex items-center gap-2">
+            Publish Job Posting
+        </h1>
+        <p class="text-xs text-slate-400">Launch a new placement or internship campaign to college candidates. Eligible trainees will immediately see this in their feeds.</p>
+    </div>
+
+    <!-- Forms Workspace -->
+    <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 sm:p-8">
+        <form method="POST" action="{% url 'jobs:publish' %}" class="space-y-5 text-left">
+            {% csrf_token %}
+
+            <!-- Core Specs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-350">Job Role Title</label>
+                    <input 
+                        type="text" 
+                        name="title" 
+                        placeholder="e.g. Senior Software Engineer" 
+                        class="w-full bg-slate-950 border border-slate-900 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500" 
+                        required
+                    >
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-350">Job Type Designation</label>
+                    <select 
+                        name="job_type" 
+                        class="w-full bg-slate-950 border border-slate-900 rounded-xl p-3 text-sm text-slate-100 cursor-pointer focus:outline-none focus:border-indigo-500"
+                    >
+                        <option value="FULL_TIME">Full-time Employment</option>
+                        <option value="INTERNSHIP">Corporate Internship</option>
+                        <option value="CONTRACT">Freelance / Contract</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Geography & Remunerations -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-350">Location Coordinates</label>
+                    <input 
+                        type="text" 
+                        name="location" 
+                        value="Bengaluru, IND"
+                        class="w-full bg-slate-950 border border-slate-900 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500" 
+                        required
+                    >
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-350">Salary Package / Annual CTC (e.g., 14 LPA)</label>
+                    <input 
+                        type="text" 
+                        name="salary_package" 
+                        placeholder="e.g. 12 LPA" 
+                        class="w-full bg-slate-950 border border-slate-900 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500" 
+                        required
+                    >
+                </div>
+            </div>
+
+            <!-- Professional & Academic thresholds -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-350">Minimum Threshold CGPA Required (out of 10.0)</label>
+                    <input 
+                        type="number" 
+                        name="min_cgpa" 
+                        value="6.00" 
+                        step="0.01" 
+                        min="0.00" 
+                        max="10.00"
+                        class="w-full bg-slate-950 border border-slate-900 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500" 
+                        required
+                    >
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-350">Registration Deadline</label>
+                    <input 
+                        type="date" 
+                        name="deadline" 
+                        class="w-full bg-slate-950 border border-slate-900 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500" 
+                        required
+                    >
+                </div>
+            </div>
+
+            <!-- Skills requirements tags list -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-350">Mandatory Technical Skills (separate with commas)</label>
+                <input 
+                    type="text" 
+                    name="skills" 
+                    placeholder="e.g. Python, Django, MySQL"
+                    class="w-full bg-slate-950 border border-slate-900 rounded-xl p-3 text-sm text-slate-100 focus:outline-none"
+                    required
+                >
+                <p class="text-[9.5px] text-slate-500 font-sans">Enter comma-separated technologies to enable candidate profile matching checks.</p>
+            </div>
+
+            <!-- Required Courses -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-350">Required Courses (Select Multiple)</label>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-950 p-4 rounded-xl border border-slate-900">
+                    {% for course in courses %}
+                        <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+                            <input 
+                                type="checkbox" 
+                                name="required_courses" 
+                                value="{{ course.id }}"
+                                class="form-checkbox rounded bg-slate-900 border-slate-800 text-indigo-650 focus:ring-0 focus:ring-offset-0"
+                            >
+                            <span>{{ course.name }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+                <p class="text-[9.5px] text-slate-500 font-sans">Select which courses are required for this job. If none are selected, the job is open to all trainees.</p>
+            </div>
+
+            <!-- Description -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-350">Detailed Role and Responsibilities Criteria</label>
+                <textarea 
+                    name="description" 
+                    placeholder="Describe the job role, candidate qualifications, day-to-day requirements, etc."
+                    class="w-full bg-slate-950 border border-slate-900 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 h-32" 
+                    required
+                ></textarea>
+            </div>
+
+            <!-- Actions button -->
+            <div class="pt-4 border-t border-slate-900/60 flex items-center justify-end gap-3 mt-4">
+                <a href="{% url 'recruiters:dashboard' %}" class="px-5 py-3 rounded-xl border border-slate-800 hover:bg-slate-900 text-xs text-slate-400 font-semibold cursor-pointer transition-all">
+                    Cancel and Return
+                </a>
+                <button type="submit" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold font-display cursor-pointer transition-all shadow-lg shadow-indigo-600/15">
+                    Publish Position Details
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

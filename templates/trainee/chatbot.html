@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire | AI Career Assistant Chatbot{% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in text-left max-w-4xl mx-auto flex flex-col h-[calc(100vh-120px)] md:h-[650px]">
+    <!-- Header title -->
+    <div class="space-y-1.5 border-b border-slate-900 pb-4 shrink-0 flex items-center justify-between">
+        <div class="space-y-1">
+            <h1 class="text-xl sm:text-2xl font-black font-display text-white flex items-center gap-2">
+                AI Career Counselor Chatbot
+            </h1>
+            <p class="text-xs text-slate-400">Ask questions regarding matching jobs, learning paths, and skills enhancements dynamically.</p>
+        </div>
+        
+        <!-- Clear chat -->
+        <form method="POST" action="" class="inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="clear">
+            <button type="submit" class="px-3.5 py-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-850 hover:text-white text-slate-400 text-xs font-bold transition-all cursor-pointer">
+                Clear Session
+            </button>
+        </form>
+    </div>
+
+    <!-- Main chat workspace -->
+    <div class="flex-grow bg-slate-950 border border-slate-900 rounded-3xl overflow-hidden flex flex-col min-h-0 shadow-2xl">
+        <!-- Messages stream container -->
+        <div class="flex-grow overflow-y-auto p-6 space-y-4 min-h-0" id="chat-messages-container">
+            {% for msg in chat_messages %}
+                <div class="flex {% if msg.role == 'user' %}justify-end{% else %}justify-start{% endif %}">
+                    <div class="max-w-[80%] rounded-2xl p-4 text-[11.5px] font-sans leading-relaxed
+                        {% if msg.role == 'user' %}
+                            bg-slate-900 border border-slate-800 text-slate-200 rounded-tr-none
+                        {% else %}
+                            bg-indigo-950/20 border border-indigo-900/30 text-slate-300 rounded-tl-none
+                        {% endif %}">
+                        <!-- Sender label -->
+                        <span class="block text-[8.5px] font-mono font-bold uppercase tracking-wider mb-1
+                            {% if msg.role == 'user' %}text-slate-500{% else %}text-indigo-400{% endif %}">
+                            {{ msg.role|yesno:"You,NextHire AI Advisor" }}
+                        </span>
+                        
+                        <!-- Text -->
+                        <div class="whitespace-pre-line">{{ msg.content }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Suggestion tags bar -->
+        <div class="px-6 py-2.5 bg-slate-900/10 border-t border-slate-900/40 shrink-0">
+            <span class="text-[9px] text-slate-500 font-mono uppercase tracking-wider block mb-1.5">Suggested Queries:</span>
+            <div class="flex flex-wrap gap-2">
+                <button type="button" onclick="submitSuggestedQuery(this.innerText);" class="px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-900 text-[10px] text-indigo-400 hover:text-white cursor-pointer font-medium transition-all">
+                    What skills should I learn?
+                </button>
+                <button type="button" onclick="submitSuggestedQuery(this.innerText);" class="px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-900 text-[10px] text-indigo-400 hover:text-white cursor-pointer font-medium transition-all">
+                    Which job suits me?
+                </button>
+                <button type="button" onclick="submitSuggestedQuery(this.innerText);" class="px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-900 text-[10px] text-indigo-400 hover:text-white cursor-pointer font-medium transition-all">
+                    How can I boost my readiness score?
+                </button>
+            </div>
+        </div>
+
+        <!-- Inputs text form -->
+        <div class="p-4 bg-slate-900/30 border-t border-slate-900/60 shrink-0">
+            <form method="POST" action="" class="flex items-center gap-2" id="chat-input-form">
+                {% csrf_token %}
+                <input 
+                    type="text" 
+                    name="query" 
+                    id="chat-query"
+                    required
+                    placeholder="Ask about target career fields, technical roadmap checklists..."
+                    class="flex-grow bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-100 placeholder-slate-650 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                >
+                <button type="submit" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white transition-all shadow-lg shadow-indigo-600/10 cursor-pointer text-center select-none shrink-0">
+                    Send Message
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto scroll chat list to bottom
+    window.onload = function() {
+        var container = document.getElementById("chat-messages-container");
+        container.scrollTop = container.scrollHeight;
+    };
+    
+    function submitSuggestedQuery(text) {
+        document.getElementById("chat-query").value = text;
+        document.getElementById("chat-input-form").submit();
+    }
+</script>
+{% endblock %}

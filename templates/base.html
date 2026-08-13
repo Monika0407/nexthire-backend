@@ -1,0 +1,570 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<script>
+    // Theme initialization (blocking to avoid flash of dark mode)
+    (function() {
+        const theme = localStorage.getItem('theme') || 'dark';
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    })();
+</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NextHire | Smart Placement Platform{% endblock %}</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS (via CDN for standalone MVT layout rendering) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Global plain background styling */
+        body {
+            background-color: #090d1a !important;
+        }
+
+        /* Light Mode Overrides */
+        html:not(.dark) body {
+            background-color: #f8fafc !important;
+            color: #0f172a !important; /* slate-900 */
+        }
+        
+        html:not(.dark) nav {
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            border-color: #e2e8f0 !important; /* slate-200 */
+            color: #0f172a !important;
+        }
+        
+        html:not(.dark) nav a {
+            color: #475569 !important; /* slate-600 */
+        }
+        html:not(.dark) nav a:hover, html:not(.dark) nav a.text-white {
+            color: #0f172a !important;
+        }
+        
+        html:not(.dark) main {
+            color: #0f172a !important;
+        }
+        
+        /* Overrides for card elements */
+        html:not(.dark) .bg-slate-900,
+        html:not(.dark) .bg-slate-900\/40,
+        html:not(.dark) .bg-slate-900\/10,
+        html:not(.dark) .bg-slate-900\/15,
+        html:not(.dark) .bg-slate-900\/20,
+        html:not(.dark) .bg-slate-950\/60,
+        html:not(.dark) .bg-slate-950\/40,
+        html:not(.dark) .bg-slate-950\/30 {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            color: #0f172a !important;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05) !important;
+        }
+        
+        /* Overrides for inner fields */
+        html:not(.dark) .bg-slate-950,
+        html:not(.dark) .bg-slate-950\/80 {
+            background-color: #f1f5f9 !important; /* slate-100 */
+            border-color: #cbd5e1 !important; /* slate-300 */
+            color: #0f172a !important;
+        }
+        
+        html:not(.dark) input, 
+        html:not(.dark) select, 
+        html:not(.dark) textarea {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        
+        html:not(.dark) input::placeholder {
+            color: #94a3b8 !important; /* slate-400 */
+        }
+        
+        html:not(.dark) label {
+            color: #475569 !important; /* slate-600 */
+        }
+        
+        html:not(.dark) .text-slate-400,
+        html:not(.dark) .text-slate-500,
+        html:not(.dark) .text-slate-450,
+        html:not(.dark) .text-slate-550 {
+            color: #475569 !important;
+        }
+        
+        html:not(.dark) .text-slate-50,
+        html:not(.dark) .text-slate-100,
+        html:not(.dark) .text-slate-200,
+        html:not(.dark) .text-slate-300,
+        html:not(.dark) .text-slate-350,
+        html:not(.dark) .text-slate-355 {
+            color: #1e293b !important; /* slate-800 */
+        }
+        
+        html:not(.dark) .text-white {
+            color: #0f172a !important;
+        }
+
+        html:not(.dark) .text-indigo-400 {
+            color: #4f46e5 !important; /* indigo-600 */
+        }
+        html:not(.dark) .text-emerald-400 {
+            color: #059669 !important; /* emerald-600 */
+        }
+        html:not(.dark) .text-cyan-400 {
+            color: #0891b2 !important; /* cyan-600 */
+        }
+        html:not(.dark) .text-amber-400 {
+            color: #d97706 !important; /* amber-600 */
+        }
+        html:not(.dark) .text-rose-400,
+        html:not(.dark) .text-rose-455 {
+            color: #e11d48 !important; /* rose-600 */
+        }
+        
+        html:not(.dark) .border-slate-800,
+        html:not(.dark) .border-slate-900,
+        html:not(.dark) .border-slate-800\/80,
+        html:not(.dark) .border-slate-800\/55,
+        html:not(.dark) .border-slate-900\/80,
+        html:not(.dark) .border-slate-850 {
+            border-color: #e2e8f0 !important;
+        }
+        
+        html:not(.dark) footer {
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+            color: #475569 !important;
+        }
+        
+        html:not(.dark) .bg-emerald-950\/30,
+        html:not(.dark) .bg-emerald-500\/10 {
+            background-color: #ecfdf5 !important;
+            border-color: #a7f3d0 !important;
+        }
+        
+        html:not(.dark) .bg-rose-950\/30,
+        html:not(.dark) .bg-rose-500\/10 {
+            background-color: #fff1f2 !important;
+            border-color: #fecdd3 !important;
+        }
+        
+        html:not(.dark) .bg-amber-950\/30,
+        html:not(.dark) .bg-amber-500\/10 {
+            background-color: #fef3c7 !important;
+            border-color: #fde68a !important;
+        }
+        
+        /* Overrides for portal badges in light mode */
+        html:not(.dark) .bg-indigo-950 {
+            background-color: #e0e7ff !important; /* indigo-100 */
+        }
+        html:not(.dark) .bg-emerald-950 {
+            background-color: #d1fae5 !important; /* emerald-100 */
+        }
+        html:not(.dark) .bg-indigo-950\/50 {
+            background-color: #e0e7ff !important; /* indigo-100 */
+            border-color: #818cf8 !important; /* indigo-400 */
+            color: #3730a3 !important; /* indigo-800 */
+        }
+        html:not(.dark) .bg-emerald-950\/50 {
+            background-color: #d1fae5 !important; /* emerald-100 */
+            border-color: #34d399 !important; /* emerald-400 */
+            color: #065f46 !important; /* emerald-800 */
+        }
+        html:not(.dark) .bg-cyan-950\/50 {
+            background-color: #ecfeff !important; /* cyan-100 */
+            border-color: #22d3ee !important; /* cyan-400 */
+            color: #075985 !important; /* cyan-800 */
+        }
+        html:not(.dark) .bg-purple-950\/50 {
+            background-color: #f3e8ff !important; /* purple-100 */
+            border-color: #c084fc !important; /* purple-400 */
+            color: #6b21a8 !important; /* purple-800 */
+        }
+        
+        /* Theme toggle button styling overrides for light mode */
+        html:not(.dark) #theme-toggle {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #475569 !important;
+        }
+        html:not(.dark) #theme-toggle:hover {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+        
+        /* Light mode dropdown styling overrides */
+        html:not(.dark) #notification-dropdown-panel {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+        }
+        html:not(.dark) #notification-dropdown-panel .text-white {
+            color: #0f172a !important;
+        }
+        html:not(.dark) #notification-dropdown-panel .text-slate-200 {
+            color: #1e293b !important;
+        }
+        html:not(.dark) #notification-dropdown-panel .border-b {
+            border-color: #f1f5f9 !important;
+        }
+        html:not(.dark) #notification-dropdown-panel .bg-slate-900\/40 {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+        html:not(.dark) #notification-dropdown-panel .text-slate-400 {
+            color: #475569 !important;
+        }
+        html:not(.dark) #notification-dropdown-panel .text-slate-500 {
+            color: #64748b !important;
+        }
+        
+        /* Smooth transitions for theme toggle */
+        body, nav, main, footer, input, select, textarea, .bg-slate-900, .bg-slate-950, label, a, button {
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-indigo-600 selection:text-white">
+
+    <!-- Top Navigation Bar -->
+    <nav class="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand Logo -->
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl font-black font-display tracking-tight text-white flex items-center gap-1"><span class="bg-gradient-to-tr from-indigo-500 to-indigo-700 text-white p-1 rounded-lg text-sm font-mono shrink-0">NH</span>Next<span class="text-indigo-500">Hire</span></span>
+                </div>
+
+                <!-- Navigation items Link -->
+                <div class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
+                    {% if request.user.is_authenticated %}
+                        {% if request.user.role == 'trainee' %}
+                            <a href="{% url 'trainees:dashboard' %}" class="hover:text-white transition-colors py-1 {% if 'trainees:dashboard' == request.resolver_match.view_name or 'students:dashboard' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %}">Dashboard</a>
+                            <a href="{% url 'applications:tracking' %}" class="hover:text-white transition-colors py-1 {% if 'applications:tracking' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %}">My Applications</a>
+                            <a href="{% url 'interviews:student_dashboard' %}" class="hover:text-white transition-colors py-1 {% if 'interviews:student_dashboard' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %}">My Interviews</a>
+                            <a href="{% url 'trainees:profile' %}" class="hover:text-white transition-colors py-1 {% if 'trainees:profile' == request.resolver_match.view_name or 'trainees:edit_profile' == request.resolver_match.view_name or 'students:profile' == request.resolver_match.view_name or 'students:edit_profile' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %}">Profile</a>
+                            <a href="{% url 'trainees:course_details' %}" class="hover:text-white transition-colors py-1 {% if 'trainees:course_details' == request.resolver_match.view_name or 'students:course_details' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %}">Course</a>
+                            <a href="{% url 'jobs:feed' %}" class="hover:text-white transition-colors py-1 {% if 'jobs:feed' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %} inline-flex items-center gap-1">Hiring Feed{% if unread_job_alerts_count %}<span class="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center min-w-[16px] h-4 leading-none">{{ unread_job_alerts_count }}</span>{% endif %}</a>
+                            <a href="{% url 'notifications:list' %}" class="hover:text-white transition-colors py-1 {% if 'notifications:list' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %} inline-flex items-center gap-1">Notifications{% if unread_notifications_count %}<span class="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center min-w-[16px] h-4 leading-none">{{ unread_notifications_count }}</span>{% endif %}</a>
+                        {% elif request.user.role == 'recruiter' %}
+                            <a href="{% url 'recruiters:dashboard' %}" class="hover:text-white transition-colors py-1 {% if 'recruiters:dashboard' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %}">Dashboard</a>
+                            <a href="{% url 'recruiters:jobs' %}" class="hover:text-white transition-colors py-1 {% if 'recruiters:jobs' == request.resolver_match.view_name or 'recruiters:job_create' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %}">Jobs</a>
+                            <a href="{% url 'recruiters:applicants' %}" class="hover:text-white transition-colors py-1 {% if 'recruiters:applicants' == request.resolver_match.view_name or 'recruiters:view_applicants' in request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %}">Applicants Bench</a>
+                            <a href="{% url 'interviews:recruiter_dashboard' %}" class="hover:text-white transition-colors py-1 {% if 'interviews:recruiter_dashboard' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %}">Interviews Manager</a>
+                            <a href="{% url 'recruiters:profile' %}" class="hover:text-white transition-colors py-1 {% if 'recruiters:profile' == request.resolver_match.view_name or 'recruiters:edit_profile' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %}">Company Profile</a>
+                            <a href="{% url 'notifications:list' %}" class="hover:text-white transition-colors py-1 {% if 'notifications:list' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %} inline-flex items-center gap-1">Notifications{% if unread_notifications_count %}<span class="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center min-w-[16px] h-4 leading-none">{{ unread_notifications_count }}</span>{% endif %}</a>
+                        {% elif request.user.role == 'trainer' %}
+                            <a href="{% url 'trainer:dashboard' %}" class="hover:text-white transition-colors py-1 {% if 'trainer:dashboard' == request.resolver_match.view_name or 'placement:dashboard' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %}">Trainer Dashboard</a>
+                            <a href="{% url 'trainer:jobs' %}" class="hover:text-white transition-colors py-1 {% if 'trainer:jobs' == request.resolver_match.view_name or 'placement:jobs' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %} inline-flex items-center gap-1">Jobs{% if unread_job_alerts_count %}<span class="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center min-w-[16px] h-4 leading-none">{{ unread_job_alerts_count }}</span>{% endif %}</a>
+                            <a href="{% url 'trainer:trainees' %}" class="hover:text-white transition-colors py-1 {% if 'trainer:trainees' == request.resolver_match.view_name or 'placement:trainees' == request.resolver_match.view_name or 'placement:students' == request.resolver_match.view_name or 'trainer:students' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %} inline-flex items-center gap-1">Trainee Verification Desk{% if pending_students_count %}<span class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center min-w-[16px] h-4 leading-none">{{ pending_students_count }}</span>{% endif %}</a>
+                            <a href="{% url 'trainer:recruiters' %}" class="hover:text-white transition-colors py-1 {% if 'trainer:recruiters' == request.resolver_match.view_name or 'placement:recruiters' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %} inline-flex items-center gap-1">Recruiter Verification Desk{% if pending_recruiters_count %}<span class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center min-w-[16px] h-4 leading-none">{{ pending_recruiters_count }}</span>{% endif %}</a>
+                            <a href="{% url 'notifications:list' %}" class="hover:text-white transition-colors py-1 {% if 'notifications:list' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %} inline-flex items-center gap-1">Notifications{% if unread_notifications_count %}<span class="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center min-w-[16px] h-4 leading-none">{{ unread_notifications_count }}</span>{% endif %}</a>
+                        {% else %}
+                            <a href="{% url 'admin_custom:dashboard' %}" class="hover:text-white transition-colors py-1 {% if 'admin_custom:dashboard' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %}">Dashboard</a>
+                            <a href="{% url 'admin_custom:trainees' %}" class="hover:text-white transition-colors py-1 {% if 'admin_custom:trainees' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %} inline-flex items-center gap-1">Trainees{% if pending_students_count %}<span class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center min-w-[16px] h-4 leading-none">{{ pending_students_count }}</span>{% endif %}</a>
+                            <a href="{% url 'admin_custom:recruiters' %}" class="hover:text-white transition-colors py-1 {% if 'admin_custom:recruiters' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %} inline-flex items-center gap-1">Recruiters{% if pending_recruiters_count %}<span class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center min-w-[16px] h-4 leading-none">{{ pending_recruiters_count }}</span>{% endif %}</a>
+                            <a href="{% url 'admin_custom:trainers' %}" class="hover:text-white transition-colors py-1 {% if 'admin_custom:trainers' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %} inline-flex items-center gap-1">Trainers{% if pending_officers_count %}<span class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center min-w-[16px] h-4 leading-none">{{ pending_officers_count }}</span>{% endif %}</a>
+                            <a href="{% url 'admin_custom:jobs' %}" class="hover:text-white transition-colors py-1 {% if 'admin_custom:jobs' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %}">Jobs</a>
+                            <a href="{% url 'admin_custom:applications' %}" class="hover:text-white transition-colors py-1 {% if 'admin_custom:applications' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %}">Applications</a>
+                            <a href="{% url 'notifications:list' %}" class="hover:text-white transition-colors py-1 {% if 'notifications:list' == request.resolver_match.view_name %}text-white border-b-2 border-indigo-500{% endif %} inline-flex items-center gap-1">Notifications{% if unread_notifications_count %}<span class="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full inline-flex items-center justify-center min-w-[16px] h-4 leading-none">{{ unread_notifications_count }}</span>{% endif %}</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <!-- Session User Menu -->
+                <div class="flex items-center gap-4">
+                    <!-- Theme Switcher Toggle Button -->
+                    <button id="theme-toggle" class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/40 hover:bg-slate-800 hover:border-slate-700 text-slate-400 hover:text-white transition-all cursor-pointer flex items-center gap-2 shrink-0 text-xs font-semibold" aria-label="Toggle theme">
+                        <!-- Sun Icon (visible in dark mode) -->
+                        <svg id="theme-toggle-light-icon" class="hidden w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path>
+                        </svg>
+                        <!-- Moon Icon (visible in light mode) -->
+                        <svg id="theme-toggle-dark-icon" class="hidden w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                        <span id="theme-toggle-text">Dark</span>
+                    </button>
+
+                    {% if request.user.is_authenticated %}
+                        <div class="hidden sm:flex flex-col items-end text-right">
+                            <span class="text-xs font-semibold text-slate-200">{{ request.user.get_full_name|default:request.user.email }}</span>
+                            {% if request.user.role == 'trainee' %}
+                                <span class="text-[10px] font-mono text-indigo-400">Batch Code: {{ request.user.trainee_profile.batch_code }}</span>
+                            {% elif request.user.role == 'trainer' %}
+                                <span class="text-[10px] font-mono text-cyan-400">PLACEMENT OFFICER</span>
+                            {% else %}
+                                <span class="text-[10px] font-mono text-emerald-400">{{ request.user.role|upper }} ACCOUNT</span>
+                            {% endif %}
+                        </div>
+                        {% if request.user.role == 'trainee' and request.user.trainee_profile.profile_image %}
+                            <img src="{{ request.user.trainee_profile.profile_image.url }}" alt="Profile Photo" class="w-8 h-8 rounded-full border border-indigo-505 object-cover shrink-0">
+                        {% else %}
+                            <div class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-xs font-mono font-bold text-indigo-400 uppercase shrink-0">
+                                {{ request.user.email|slice:":2" }}
+                            </div>
+                        {% endif %}
+                        
+                        <a href="{% url 'accounts:logout' %}" class="px-3.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/40 hover:bg-red-950/20 hover:border-red-900 hover:text-red-400 text-xs text-slate-350 font-semibold cursor-pointer transition-all">
+                            Logout
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Transact Message system Toast -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 space-y-2">
+        {% for message in messages %}
+        <div class="p-3.5 rounded-xl border text-xs flex items-center justify-between font-medium tracking-tight animate-fade-in shadow-xl
+            {% if message.tags == 'success' %}bg-emerald-950/30 border-emerald-900/60 text-emerald-400
+            {% elif message.tags == 'warning' %}bg-amber-950/30 border-amber-900/60 text-amber-400
+            {% else %}bg-rose-950/30 border-rose-900/60 text-rose-400{% endif %}">
+            <div class="flex items-center gap-2">
+                <span>{% if message.tags == 'success' %}✓{% elif message.tags == 'warning' %}!{% else %}✗{% endif %}</span>
+                <span>{{ message }}</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-slate-500 hover:text-white cursor-pointer select-none">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content Stage -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="border-t border-slate-900/80 bg-slate-950 py-6 text-center text-xs text-slate-600 font-mono">
+        <div class="max-w-7xl mx-auto px-6 flex items-center justify-center">
+            <div class="text-slate-500 font-mono text-[10px] space-y-1">
+                <span>&copy; 2026 <a href="https://qspiders.com/" target="_blank" class="hover:text-indigo-500 transition-colors underline">Qspiders</a>. All rights reserved.</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Theme Switcher Script -->
+    <script>
+        (function() {
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+            const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+            const themeToggleText = document.getElementById('theme-toggle-text');
+
+            function updateThemeUI() {
+                const isDark = document.documentElement.classList.contains('dark');
+                if (isDark) {
+                    if (themeToggleLightIcon) themeToggleLightIcon.classList.remove('hidden');
+                    if (themeToggleDarkIcon) themeToggleDarkIcon.classList.add('hidden');
+                    if (themeToggleText) themeToggleText.textContent = 'Dark';
+                } else {
+                    if (themeToggleLightIcon) themeToggleLightIcon.classList.add('hidden');
+                    if (themeToggleDarkIcon) themeToggleDarkIcon.classList.remove('hidden');
+                    if (themeToggleText) themeToggleText.textContent = 'Light';
+                }
+            }
+
+            // Run UI update on load
+            updateThemeUI();
+
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', function() {
+                    if (document.documentElement.classList.contains('dark')) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('theme', 'light');
+                    } else {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('theme', 'dark');
+                    }
+                    updateThemeUI();
+                });
+            }
+        })();
+    </script>
+
+    <!-- Notifications Dropdown Toggle Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const bellBtn = document.getElementById("notification-bell-btn");
+            const panel = document.getElementById("notification-dropdown-panel");
+            const wrapper = document.getElementById("notification-dropdown-wrapper");
+
+            if (bellBtn && panel) {
+                bellBtn.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    panel.classList.toggle("hidden");
+                });
+
+                document.addEventListener("click", function(e) {
+                    if (wrapper && !wrapper.contains(e.target)) {
+                        panel.classList.add("hidden");
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!-- Reusable Job Details Modal -->
+    <div id="job-detail-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-3xl w-full space-y-6 shadow-2xl relative text-left">
+            <button onclick="closeJobDetailModal()" class="absolute top-5 right-5 w-7 h-7 rounded-full border border-slate-800 hover:border-slate-700 hover:text-white bg-slate-950/60 text-slate-500 flex items-center justify-center text-xs font-bold cursor-pointer select-none transition-all">
+                &times;
+            </button>
+
+            <div class="space-y-1">
+                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded" id="job-modal-type">Job Type</span>
+                <h2 id="job-modal-title" class="text-xl sm:text-2xl font-black font-display text-white mt-2">Job Title</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto max-h-[400px] pr-2">
+                <!-- Left Side: Job Info -->
+                <div class="space-y-4 border-r border-slate-800/60 pr-0 md:pr-6">
+                    <div>
+                        <h3 class="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider mb-2">Job Details</h3>
+                        <div class="space-y-1.5 text-xs text-slate-350">
+                            <p>Location: <strong class="text-slate-200" id="job-modal-location">Location</strong></p>
+                            <p>CTC / Stipend: <strong class="text-emerald-400 font-bold" id="job-modal-salary">Salary</strong></p>
+                            <p>Deadline: <strong class="text-rose-400 font-bold" id="job-modal-deadline">Deadline</strong></p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider mb-2">Description</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed font-normal whitespace-pre-wrap" id="job-modal-description">Description</p>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider mb-2">Required Skills</h3>
+                        <div class="flex flex-wrap gap-1.5" id="job-modal-skills"></div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider mb-2">Required Enrolled Courses</h3>
+                        <div class="flex flex-wrap gap-1.5" id="job-modal-courses"></div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Company Info -->
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider mb-2">Company Overview</h3>
+                        <div class="space-y-1.5 text-xs text-slate-350">
+                            <p>Enterprise: <strong class="text-indigo-400 font-bold" id="job-modal-company-name">Company Name</strong></p>
+                            <p>Industry Domain: <strong class="text-slate-200" id="job-modal-company-domain">Domain</strong></p>
+                            <p id="job-modal-company-website-container" class="hidden">
+                                Website: <a id="job-modal-company-website" href="#" target="_blank" class="text-indigo-400 hover:underline">Website</a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider mb-2">About Company</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed font-normal whitespace-pre-wrap" id="job-modal-company-about">About company...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4 border-t border-slate-800/60">
+                <button onclick="closeJobDetailModal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl cursor-pointer transition-all">
+                    Close Details
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openJobDetailModal(btn) {
+            const data = btn.dataset;
+            document.getElementById('job-modal-title').textContent = data.jobTitle;
+            document.getElementById('job-modal-type').textContent = data.jobType;
+            document.getElementById('job-modal-location').textContent = data.location;
+            document.getElementById('job-modal-salary').textContent = data.salary;
+            document.getElementById('job-modal-deadline').textContent = data.deadline;
+            document.getElementById('job-modal-description').textContent = data.description;
+            
+            // Skills
+            const skillsContainer = document.getElementById('job-modal-skills');
+            skillsContainer.innerHTML = '';
+            if (data.skills && data.skills.trim()) {
+                data.skills.split(',').forEach(skill => {
+                    const span = document.createElement('span');
+                    span.className = 'text-[9.5px] font-mono bg-slate-950 border border-slate-900 px-2 py-0.5 rounded text-slate-400';
+                    span.textContent = skill.trim();
+                    skillsContainer.appendChild(span);
+                });
+            } else {
+                skillsContainer.innerHTML = '<span class="text-xs text-slate-500 italic">None Required</span>';
+            }
+
+            // Courses
+            const coursesContainer = document.getElementById('job-modal-courses');
+            coursesContainer.innerHTML = '';
+            if (data.courses && data.courses.trim()) {
+                data.courses.split(',').forEach(course => {
+                    const span = document.createElement('span');
+                    span.className = 'text-[9.5px] font-mono bg-indigo-950/20 border border-indigo-900/40 px-2 py-0.5 rounded text-indigo-400';
+                    span.textContent = course.trim();
+                    coursesContainer.appendChild(span);
+                });
+            } else {
+                coursesContainer.innerHTML = '<span class="text-xs text-slate-500 italic">None Required</span>';
+            }
+
+            // Company info
+            document.getElementById('job-modal-company-name').textContent = data.companyName;
+            document.getElementById('job-modal-company-domain').textContent = data.companyDomain;
+            
+            const websiteEl = document.getElementById('job-modal-company-website');
+            if (data.companyWebsite && data.companyWebsite.trim()) {
+                websiteEl.href = data.companyWebsite;
+                websiteEl.textContent = data.companyWebsite;
+                websiteEl.classList.remove('hidden');
+                document.getElementById('job-modal-company-website-container').classList.remove('hidden');
+            } else {
+                websiteEl.classList.add('hidden');
+                document.getElementById('job-modal-company-website-container').classList.add('hidden');
+            }
+            
+            document.getElementById('job-modal-company-about').textContent = data.companyAbout;
+
+            // Show modal
+            document.getElementById('job-detail-modal').classList.remove('hidden');
+        }
+
+        function closeJobDetailModal() {
+            document.getElementById('job-detail-modal').classList.add('hidden');
+        }
+
+        document.getElementById('job-detail-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeJobDetailModal();
+            }
+        });
+    </script>
+</body>
+</html>

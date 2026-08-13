@@ -1,0 +1,135 @@
+<!-- templates/ml_engine/skill_gap.html -->
+{% extends 'base.html' %}
+{% block title %}NextHire | Role-Based Skill Gap Analysis{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in max-w-4xl mx-auto">
+    <!-- Header banner details -->
+    <div class="border-b border-slate-900 pb-5">
+        <a href="{% url 'ml_engine:dashboard' %}" class="text-xs font-semibold text-indigo-400 hover:underline">Back to Diagnostics Hub</a>
+        <h1 class="text-2xl font-black mt-2 tracking-tight">Technical Skill Gap Diagnostic</h1>
+        <p class="text-xs text-slate-400 mt-1">Select a specific corporate vacant role to inspect missing tech stacks overlaps, and view suggested curriculum pathways.</p>
+    </div>
+
+    <!-- Selection Dropdown -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 border border-slate-910 bg-slate-950 rounded-2xl">
+        <span class="text-xs font-extrabold text-white">Choose Target Role:</span>
+        <form method="GET" class="max-w-sm shrink-0 w-full sm:w-auto">
+            <select name="job_id" class="px-3.5 py-2 rounded-xl border border-slate-900 bg-slate-950 text-xs text-slate-300 font-bold focus:outline-none focus:border-indigo-505 w-full cursor-pointer" onchange="this.form.submit()">
+                <option value="">-- Choose target Job Vacancy --</option>
+                {% for job in all_jobs %}
+                <option value="{{ job.id }}" {% if selected_job and selected_job.id == job.id %}selected{% endif %}>{{ job.title }} ({{ job.recruiter.company_name }})</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    {% if analysis %}
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 text-xs font-semibold">
+        <!-- Highlights Column -->
+        <div class="md:col-span-4 space-y-6">
+            <!-- Score Card -->
+            <div class="p-6 border border-slate-900 bg-slate-950 rounded-2xl text-center space-y-3">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-black block border-b border-slate-900 pb-3">Evaluation Overlap</span>
+                
+                <h1 class="text-4xl font-black font-mono {% if analysis.match_score >= 75 %}text-emerald-400{% elif analysis.match_score >= 50 %}text-amber-400{% else %}text-rose-400{% endif %}">
+                    {{ analysis.match_score }}%
+                </h1>
+
+                <p class="text-[10.5px] text-slate-400">Total profile compliance metric calculated.</p>
+                <div class="pt-2">
+                    {% if analysis.is_eligible %}
+                    <span class="px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] uppercase tracking-wider font-mono">GPA CUTOFF COMPLIANT</span>
+                    {% else %}
+                    <span class="px-2.5 py-1 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[9px] uppercase tracking-wider font-mono">GPA UNDER THRESHOLD</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Overlap matrix summary -->
+            <div class="p-5 border border-slate-900 bg-slate-950 rounded-2xl space-y-4">
+                <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 border-b border-slate-900 pb-2">Compliance metrics</h3>
+                <div class="space-y-2 font-mono text-[10.5px]">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Skills Overlap:</span>
+                        <span class="text-white">{{ analysis.breakdown.skills_score }}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Academic Gap:</span>
+                        <span class="text-white">{{ analysis.breakdown.academic_score }}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Experience Index:</span>
+                        <span class="text-white">{{ analysis.breakdown.experience_score }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Suggestions column -->
+        <ol class="md:col-span-8 space-y-6 list-none m-0 p-0">
+            <!-- Overlap metrics checks -->
+            <li class="p-6 border border-slate-900 bg-slate-950 rounded-2xl space-y-4">
+                <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 border-b border-slate-900 pb-2 flex items-center gap-2">
+                    <span></span> Technical Skills Overlaps
+                </h3>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Matched skills -->
+                    <div class="space-y-2">
+                        <span class="text-[10px] font-mono text-emerald-550 uppercase font-black">Matched Skills ({{ analysis.matched_skills|length }})</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            {% for msk in analysis.matched_skills %}
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-[10px]">✓ {{ msk }}</span>
+                            {% empty %}
+                            <span class="text-slate-500 italic text-[10.5px]">No matching tech skills.</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Gaps/Missing -->
+                    <div class="space-y-2">
+                        <span class="text-[10px] font-mono text-rose-550 uppercase font-black">Missing Skills ({{ analysis.missing_skills|length }})</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            {% for msk in analysis.missing_skills %}
+                            <span class="px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 font-mono text-[10px]">✗ {{ msk }}</span>
+                            {% empty %}
+                            <span class="text-emerald-555 font-mono text-[10.5px] italic">No missing skills! Clear tech profile.</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </li>
+
+            <!-- Actionable learning paths -->
+            <li class="p-6 border border-slate-900 bg-slate-950 rounded-2xl space-y-4">
+                <h3 class="text-xs font-black uppercase tracking-wider text-indigo-400 border-b border-slate-900 pb-3 block">
+                    Actionable Study Curriculum & Pathways
+                </h3>
+                <p class="text-xs text-slate-400 mt-2">To bridge the gap and secure an interview, complete these study courses and projects directories:</p>
+
+                <div class="space-y-3">
+                    {% for step in analysis.actionable_steps %}
+                    <div class="p-4 rounded-xl border border-slate-900 bg-slate-900/30 space-y-1.5">
+                        <div class="flex items-center gap-2 font-mono">
+                            <span class="px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase">ACQUIRE</span>
+                            <span class="text-white font-bold">{{ step.skill }}</span>
+                        </div>
+                        <p class="text-[10.5px] text-slate-400">Recommended Pathway: <span class="text-slate-250 font-bold">{{ step.suggestion }}</span></p>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-6 text-slate-500 italic">No missing-skills study pathways required! Your profile represents a comprehensive tech alignment for this vacancy.</div>
+                    {% endfor %}
+                </div>
+            </li>
+        </ol>
+    </div>
+    {% else %}
+    <div class="p-12 border border-dashed border-slate-900 bg-slate-950 rounded-2xl text-center flex flex-col items-center justify-center min-h-[350px]">
+        <span class="text-3xl"></span>
+        <h4 class="text-xs font-black text-slate-350 mt-4 uppercase tracking-wider font-display">Awaiting vacancy Selection</h4>
+        <p class="text-[10.5px] text-slate-500 mt-1 max-w-[270px]">Select any of the active job openings in the dropdown select-box above to run a detailed technology profile gap analysis.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

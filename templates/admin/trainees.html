@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire Admin | Trainee Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in text-left">
+    <!-- Header banner -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-900 pb-5">
+        <div class="space-y-1">
+            <h1 class="text-xl sm:text-2xl font-black font-display text-white">
+                Trainee Candidate Management
+            </h1>
+            <p class="text-xs text-slate-400">Search trainee profiles database, review credentials details, and activate or deactivate platform access.</p>
+        </div>
+
+        <!-- Search Form -->
+        <form method="GET" class="flex items-center gap-2">
+            <input 
+                type="text" 
+                name="q" 
+                value="{{ q }}" 
+                placeholder="Search Batch Code, Email or Name..." 
+                class="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 w-56 sm:w-64"
+            >
+            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
+                Search
+            </button>
+            {% if q %}
+                <a href="{% url 'admin_custom:trainees' %}" class="text-xs text-slate-500 hover:text-white underline ml-1">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Details view overlay if selected -->
+    {% if detail_student %}
+        <div class="bg-indigo-950/10 border border-indigo-900/30 p-6 rounded-3xl space-y-4">
+            <div class="flex justify-between items-start">
+                <div class="space-y-1">
+                    <span class="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/10 uppercase">Profile Details</span>
+                    <h3 class="text-lg font-bold text-white font-sans">{{ detail_student.user.get_full_name|default:detail_student.user.email }}</h3>
+                    <p class="text-xs text-slate-450">Batch Code: <span class="font-mono text-slate-300 font-bold">{{ detail_student.batch_code }}</span></p>
+                </div>
+                <a href="?q={{ q }}" class="text-xs text-slate-500 hover:text-white">&times; Close details</a>
+            </div>
+
+            <!-- Parameters Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-2 text-xs text-slate-400 leading-relaxed font-sans">
+                <!-- Academic info -->
+                <div class="space-y-2 bg-slate-950/30 p-4 rounded-xl border border-slate-900">
+                    <h4 class="font-mono text-[10px] font-bold text-slate-500 uppercase">Academic Details</h4>
+                    <p>Degree: <strong class="text-slate-200">{{ detail_student.get_degree_display }}</strong></p>
+                    <p>Branch: <strong class="text-slate-200">{{ detail_student.branch }}</strong></p>
+                    <p>CGPA score: <strong class="text-indigo-400 font-mono">{{ detail_student.cgpa }}/10.00</strong></p>
+                    <p>Experience: <strong class="text-amber-400 font-mono">{{ detail_student.experience_years }} year{{ detail_student.experience_years|pluralize }}</strong></p>
+                </div>
+
+                <!-- Professional info -->
+                <div class="space-y-2 bg-slate-950/30 p-4 rounded-xl border border-slate-900">
+                    <h4 class="font-mono text-[10px] font-bold text-slate-500 uppercase">Skills & certs</h4>
+                    <p>Skills: 
+                        <span class="block text-slate-200 mt-1 font-mono text-[10.5px]">
+                            {% for skill in detail_student.skills %}
+                                <span class="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-slate-400 text-[10px] mr-1 inline-block mb-1">{{ skill }}</span>
+                            {% empty %}
+                                No skills tags
+                            {% endfor %}
+                        </span>
+                    </p>
+                    <p>Certifications: 
+                        <span class="block text-slate-200 mt-1 font-mono text-[10.5px]">
+                            {% for cert in detail_student.certifications %}
+                                <span class="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-slate-400 text-[10px] mr-1 inline-block mb-1">
+                                    {% if cert.name %}{{ cert.name }}{% if cert.organization %} ({{ cert.organization }}){% endif %}{% else %}{{ cert }}{% endif %}
+                                </span>
+                            {% empty %}
+                                No certifications
+                            {% endfor %}
+                        </span>
+                    </p>
+                </div>
+
+                <!-- Resume document vault -->
+                <div class="space-y-2 bg-slate-950/30 p-4 rounded-xl border border-slate-900 flex flex-col justify-between">
+                    <div>
+                        <h4 class="font-mono text-[10px] font-bold text-slate-500 uppercase">Documents Vault</h4>
+                        {% if detail_student.resume_file %}
+                            <p class="text-emerald-400 mt-1">Portfolio Resume Uploaded</p>
+                            <p class="text-[10px] text-slate-550">Timestamp: {{ detail_student.resume_uploaded_at|date:"M d, Y" }}</p>
+                        {% else %}
+                            <p class="text-red-400 mt-1">No portfolio uploaded</p>
+                        {% endif %}
+                    </div>
+                    {% if detail_student.resume_file %}
+                        <a href="{% url 'trainees:resume_preview' detail_student.usn %}" target="_blank" class="w-full text-center py-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-300 font-semibold hover:text-white transition-all text-[11px] mt-2">
+                            Preview Resume
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Trainees Table List -->
+    <div class="bg-slate-900/10 border border-slate-900 rounded-3xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="border-b border-slate-900 text-slate-500 font-mono bg-slate-950/40">
+                        <th class="p-4 font-bold">Trainee Name / Email</th>
+                        <th class="p-4 font-bold">Batch Code</th>
+                        <th class="p-4 font-bold">Degree & Course</th>
+                        <th class="p-4 font-bold">CGPA Score</th>
+                        <th class="p-4 font-bold">Verification Status</th>
+                        <th class="p-4 font-bold">Account Access</th>
+                        <th class="p-4 font-bold text-right whitespace-nowrap">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-900/60">
+                    {% for trainee in trainees %}
+                        <tr class="hover:bg-slate-900/15 {% if not trainee.user.is_active %}opacity-60{% endif %}">
+                            <td class="p-4">
+                                <div class="space-y-0.5">
+                                    <span class="font-bold text-slate-100 block">{{ trainee.user.get_full_name|default:trainee.user.email }}</span>
+                                    <span class="text-[10px] text-slate-500 block font-mono">{{ trainee.user.email }}</span>
+                                </div>
+                                {% if trainee.course_edit_request_status == 'pending' %}
+                                    <div class="mt-2 bg-amber-500/5 border border-amber-500/20 p-2 rounded-xl flex items-center justify-between gap-4">
+                                        <span class="text-[10px] text-amber-500 font-mono font-bold uppercase">Requested Course Edit</span>
+                                        <div class="flex gap-1.5 shrink-0">
+                                            <form method="POST" action="" class="inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="trainee_id" value="{{ trainee.id }}">
+                                                <input type="hidden" name="action" value="approve_course_edit">
+                                                <button type="submit" class="px-2 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white font-bold text-[9px] cursor-pointer transition-all">
+                                                    Approve
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="" class="inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="trainee_id" value="{{ trainee.id }}">
+                                                <input type="hidden" name="action" value="reject_course_edit">
+                                                <button type="submit" class="px-2 py-1 rounded border border-red-900 hover:bg-red-950/20 text-red-400 text-[9px] font-bold cursor-pointer transition-all">
+                                                    Reject
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="p-4 font-mono text-slate-300">{{ trainee.batch_code }}</td>
+                            <td class="p-4">
+                                <span class="text-slate-350 block">{{ trainee.get_degree_display }} ({{ trainee.branch }})</span>
+                                <div class="flex flex-wrap gap-1 mt-1.5">
+                                    {% for course in trainee.courses.all %}
+                                        <span class="px-2 py-0.5 rounded text-[9px] font-mono bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-medium">
+                                            {{ course.name }}
+                                        </span>
+                                    {% empty %}
+                                        <span class="text-slate-500 italic text-[9px]">No courses selected</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="p-4 font-bold text-indigo-400 font-mono">{{ trainee.cgpa }}</td>
+                            <td class="p-4 font-bold">
+                                <span class="px-2 py-1 rounded border uppercase text-[9.5px]
+                                    {% if trainee.approval_status == 'approved' %}bg-emerald-500/10 border-emerald-500/25 text-emerald-400
+                                    {% elif trainee.approval_status == 'rejected' %}bg-rose-500/10 border-rose-500/25 text-rose-455
+                                    {% else %}bg-amber-500/10 border-amber-500/25 text-amber-400{% endif %}">
+                                    {% if trainee.approval_status == 'approved' %}Approved
+                                    {% elif trainee.approval_status == 'rejected' %}Rejected
+                                    {% else %}Pending{% endif %}
+                                </span>
+                            </td>
+                            <td class="p-4">
+                                <span class="px-2 py-0.5 rounded text-[9.5px] border uppercase
+                                    {% if trainee.user.is_active %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                                    {% else %}bg-rose-500/10 border-rose-500/20 text-rose-455{% endif %}">
+                                    {{ trainee.user.is_active|yesno:"Active,Deactivated" }}
+                                </span>
+                            </td>
+                            <td class="p-4 text-right whitespace-nowrap">
+                                <div class="flex items-center justify-end gap-2 flex-nowrap whitespace-nowrap">
+                                    <!-- Approval Actions -->
+                                    {% if trainee.approval_status != 'approved' %}
+                                        <form method="POST" action="" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="trainee_id" value="{{ trainee.id }}">
+                                            <input type="hidden" name="action" value="approve">
+                                            <button type="submit" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10.5px] cursor-pointer transition-all">
+                                                Approve
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                    {% if trainee.approval_status != 'rejected' %}
+                                        <form method="POST" action="" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="trainee_id" value="{{ trainee.id }}">
+                                            <input type="hidden" name="action" value="reject">
+                                            <button type="submit" class="px-2.5 py-1.5 rounded-lg border border-red-900 hover:bg-red-950/20 text-red-400 text-[10.5px] font-bold cursor-pointer transition-all" onclick="return confirm('Revoke placement eligibility for this trainee?')">
+                                                Reject
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                    <a href="?q={{ q }}&detail={{ trainee.id }}" class="px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-350 text-[10.5px] font-semibold transition-all">
+                                        View details
+                                    </a>
+                                    <form method="POST" action="" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="toggle_active">
+                                        <input type="hidden" name="user_id" value="{{ trainee.user.id }}">
+                                        <button type="submit" class="px-2.5 py-1.5 rounded-lg border text-[10.5px] font-bold cursor-pointer transition-all
+                                            {% if trainee.user.is_active %}border-red-950 bg-red-950/15 hover:bg-red-950/30 text-red-400
+                                            {% else %}border-emerald-950 bg-emerald-950/15 hover:bg-emerald-950/30 text-emerald-400{% endif %}"
+                                            onclick="return confirm('Change access authorization status for this trainee candidate?')">
+                                            {{ trainee.user.is_active|yesno:"Deactivate,Activate" }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="7" class="p-12 text-center text-slate-500 font-mono">No matching candidate registers found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

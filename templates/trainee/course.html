@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire | Course Details{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6 animate-fade-in">
+    <!-- Header -->
+    <div class="space-y-1.5 border-b border-slate-900 pb-4">
+        <h1 class="text-xl sm:text-2xl font-black font-display text-white flex items-center gap-2">
+            Course Details Section
+        </h1>
+        <p class="text-xs text-slate-400">View and update your academic courses, batch timings, and current training status.</p>
+    </div>
+
+    <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 sm:p-8">
+        <form method="POST" class="space-y-8 text-left">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Batch Code -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-355 flex items-center justify-between">
+                        <span>Batch Code <span class="text-rose-500">*</span></span>
+                        {% if trainee.course_edit_request_status == 'pending' %}
+                            <span class="text-[10px] font-mono font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/10">Pending Approval</span>
+                        {% elif trainee.course_edit_request_status == 'rejected' %}
+                            <span class="text-[10px] font-mono font-bold text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/10">Request Rejected</span>
+                        {% endif %}
+                    </label>
+                    
+                    <input type="text" name="batch_code" value="{{ trainee.batch_code|default:'' }}" required
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                           placeholder="Enter Batch Code">
+                </div>
+
+                <!-- Batch Timing -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-350">Batch Timing</label>
+                    <select name="batch_timing" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-300 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer">
+                        <option value="" {% if not trainee.batch_timing %}selected{% endif %}>Select Timing</option>
+                        <option value="Morning" {% if trainee.batch_timing == 'Morning' %}selected{% endif %}>Morning</option>
+                        <option value="Afternoon" {% if trainee.batch_timing == 'Afternoon' %}selected{% endif %}>Afternoon</option>
+                        <option value="Evening" {% if trainee.batch_timing == 'Evening' %}selected{% endif %}>Evening</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Joining Date -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-350">Joining Date</label>
+                    <input type="date" name="joining_date" value="{{ trainee.joining_date|date:'Y-m-d' }}"
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all">
+                </div>
+
+                <!-- Expected Completion Date -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-350">Expected Completion Date</label>
+                    <input type="date" name="expected_completion_date" value="{{ trainee.expected_completion_date|date:'Y-m-d' }}"
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all">
+                </div>
+
+                <!-- Current Status -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-350">Current Status</label>
+                    <select name="current_status" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-300 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer">
+                        <option value="Training" {% if trainee.current_status == 'Training' %}selected{% endif %}>Training</option>
+                        <option value="Placement Ready" {% if trainee.current_status == 'Placement Ready' %}selected{% endif %}>Placement Ready</option>
+                        <option value="Placed" {% if trainee.current_status == 'Placed' %}selected{% endif %}>Placed</option>
+                        <option value="Alumni" {% if trainee.current_status == 'Alumni' %}selected{% endif %}>Alumni</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Courses Enrolled -->
+            <div class="space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-semibold text-slate-355">Courses Enrolled</label>
+                    <span class="text-[10px] text-slate-500 font-mono">Autofilled from registration. Edit requires approval.</span>
+                </div>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-950 p-4 rounded-2xl border border-slate-900">
+                    {% for course in all_courses %}
+                        <label class="flex items-center gap-2 text-xs text-slate-355 cursor-pointer select-none">
+                            <input type="checkbox" name="courses" value="{{ course.id }}" class="course-chk form-checkbox rounded bg-slate-900 border-slate-850 text-indigo-650 focus:ring-0 focus:ring-offset-0"
+                                   {% if course in trainee.courses.all %}checked{% endif %}
+                                   onchange="updateCourseCompletionTable()">
+                            <span>{{ course.name }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Course Progress Table -->
+            <div class="space-y-3">
+                <label class="text-xs font-semibold text-slate-350">Course Progress</label>
+                <div class="overflow-x-auto bg-slate-950/60 p-4 rounded-2xl border border-slate-900">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-900 text-slate-500 font-mono">
+                                <th class="pb-2 font-bold">Course</th>
+                                <th class="pb-2 font-bold text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="course-completion-tbody" class="divide-y divide-slate-900/60">
+                            <!-- Populated dynamically via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-900/60">
+                <a href="{% url 'trainees:dashboard' %}" class="px-5 py-3 rounded-xl border border-slate-800 hover:bg-slate-900 text-xs text-slate-400 font-semibold transition-all">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-650/15">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Initial completion status mapping
+    const initialCourseCompletion = {
+        {% for course_name, status in course_completion.items %}
+            "{{ course_name|escapejs }}": "{{ status|escapejs }}",
+        {% endfor %}
+    };
+
+    function updateCourseCompletionTable() {
+        const tbody = document.getElementById("course-completion-tbody");
+        if (!tbody) return;
+
+        // Find all checkboxes
+        const checkboxes = document.querySelectorAll(".course-chk");
+        const checkedCourses = [];
+        checkboxes.forEach(chk => {
+            if (chk.checked) {
+                const name = chk.nextElementSibling.textContent.trim();
+                const id = chk.value;
+                checkedCourses.push({ id, name });
+            }
+        });
+
+        // Current tbody rows
+        const currentHtml = tbody.innerHTML;
+        tbody.innerHTML = "";
+
+        if (checkedCourses.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="2" class="py-4 text-center text-slate-500 font-mono font-light">No enrolled courses selected.</td></tr>`;
+            return;
+        }
+
+        checkedCourses.forEach(c => {
+            // Find existing value if any
+            let currentStatus = initialCourseCompletion[c.name] || 'In Progress';
+            
+            // If there's an active dropdown in DOM, preserve its value
+            const selectEl = document.querySelector(`select[name="course_status_${c.id}"]`);
+            if (selectEl) {
+                currentStatus = selectEl.value;
+            }
+
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-slate-900/20";
+            tr.innerHTML = `
+                <td class="py-3 font-semibold text-slate-200">${c.name}</td>
+                <td class="py-3 text-right">
+                    <select name="course_status_${c.id}" class="bg-slate-950 border border-slate-850 rounded-lg px-2.5 py-1.5 text-xs text-slate-305 focus:border-indigo-500 focus:outline-none cursor-pointer">
+                        <option value="In Progress" ${currentStatus === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                        <option value="Completed" ${currentStatus === 'Completed' ? 'selected' : ''}>Completed</option>
+                    </select>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Run on page load
+    document.addEventListener("DOMContentLoaded", function() {
+        updateCourseCompletionTable();
+    });
+</script>
+{% endblock %}

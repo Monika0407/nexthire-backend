@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire Admin | Recruiter Approvals{% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in text-left">
+    <!-- Header banner -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-900 pb-5">
+        <div class="space-y-1">
+            <h1 class="text-xl sm:text-2xl font-black font-display text-white">
+                Corporate Recruiter Verification
+            </h1>
+            <p class="text-xs text-slate-400">Review corporate profile submissions, verify company credentials, and approve or reject recruitment authorization.</p>
+        </div>
+    </div>
+
+    <!-- Recruiters Table List -->
+    <div class="bg-slate-900/10 border border-slate-900 rounded-3xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="border-b border-slate-900 text-slate-500 font-mono bg-slate-950/40">
+                        <th class="p-4 font-bold">Company Name / Contact</th>
+                        <th class="p-4 font-bold">Industry Domain</th>
+                        <th class="p-4 font-bold">Company Website</th>
+                        <th class="p-4 font-bold">About Company</th>
+                        <th class="p-4 font-bold">Verification Status</th>
+                        <th class="p-4 font-bold">Account Access</th>
+                        <th class="p-4 font-bold text-right">Actions Panel</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-900/60">
+                    {% for recruiter in recruiters %}
+                        <tr class="hover:bg-slate-900/15 {% if not recruiter.user.is_active %}opacity-60{% endif %}">
+                            <td class="p-4">
+                                <div class="space-y-0.5">
+                                    <span class="font-bold text-slate-100 block">{{ recruiter.company_name }}</span>
+                                    <span class="text-[10px] text-slate-500 block font-mono">{{ recruiter.contact_email }}</span>
+                                </div>
+                            </td>
+                            <td class="p-4 text-slate-350">{{ recruiter.industry_domain }}</td>
+                            <td class="p-4 font-mono text-indigo-400">
+                                {% if recruiter.company_website %}
+                                    <a href="{{ recruiter.company_website }}" target="_blank" class="hover:underline flex items-center gap-1">
+                                        {{ recruiter.company_website|slice:":30" }}... &nearr;
+                                    </a>
+                                {% else %}
+                                    <span class="text-slate-600 italic">No website URL</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-4 text-slate-400 max-w-[240px]">
+                                {% if recruiter.about_company and recruiter.about_company|length > 30 %}
+                                    <span class="text-slate-450">{{ recruiter.about_company|slice:":30" }}...</span>
+                                    <button type="button" onclick="openAboutModal('{{ recruiter.company_name|escapejs }}', '{{ recruiter.about_company|escapejs }}')" class="text-indigo-400 hover:text-indigo-300 font-bold hover:underline cursor-pointer ml-1 select-none whitespace-nowrap">
+                                        Learn More
+                                    </button>
+                                {% else %}
+                                    {{ recruiter.about_company|default:"No description shared." }}
+                                {% endif %}
+                            </td>
+                            <td class="p-4 font-bold">
+                                <span class="px-2 py-1 rounded border uppercase text-[9.5px] whitespace-nowrap inline-block
+                                    {% if recruiter.is_approved_by_admin %}bg-emerald-500/10 border-emerald-500/25 text-emerald-400
+                                    {% else %}bg-rose-500/10 border-rose-500/25 text-rose-455{% endif %}">
+                                    {{ recruiter.is_approved_by_admin|yesno:"Approved,Awaiting Verification" }}
+                                </span>
+                            </td>
+                            <td class="p-4">
+                                <span class="px-2 py-0.5 rounded text-[9.5px] border uppercase
+                                    {% if recruiter.user.is_active %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                                    {% else %}bg-rose-500/10 border-rose-500/20 text-rose-455{% endif %}">
+                                    {{ recruiter.user.is_active|yesno:"Active,Deactivated" }}
+                                </span>
+                            </td>
+                            <td class="p-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    {% if not recruiter.is_approved_by_admin %}
+                                        <form method="POST" action="" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="recruiter_id" value="{{ recruiter.id }}">
+                                            <input type="hidden" name="action" value="approve">
+                                            <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10.5px] cursor-pointer transition-all">
+                                                Approve
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <form method="POST" action="" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="recruiter_id" value="{{ recruiter.id }}">
+                                            <input type="hidden" name="action" value="reject">
+                                            <button type="submit" class="px-3 py-1.5 rounded-lg border border-red-900 hover:bg-red-950/20 text-red-400 text-[10.5px] cursor-pointer transition-all" onclick="return confirm('Revoke verification for this recruiter?')">
+                                                Disapprove
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                    <form method="POST" action="" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="recruiter_id" value="{{ recruiter.id }}">
+                                        <input type="hidden" name="action" value="toggle_active">
+                                        <button type="submit" class="px-3 py-1.5 rounded-lg border text-[10.5px] font-bold cursor-pointer transition-all
+                                            {% if recruiter.user.is_active %}border-red-950 bg-red-950/15 hover:bg-red-950/30 text-red-400
+                                            {% else %}border-emerald-950 bg-emerald-950/15 hover:bg-emerald-950/30 text-emerald-400{% endif %}"
+                                            onclick="return confirm('Change access authorization status for this recruiter?')">
+                                            {{ recruiter.user.is_active|yesno:"Deactivate,Activate" }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="6" class="p-12 text-center text-slate-500 font-mono">No corporate recruiter partners registered.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for About Company details -->
+<div id="about-company-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-6 shadow-2xl relative text-left">
+        <div class="space-y-2">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-indigo-400">Corporate Details</span>
+            <h2 id="about-modal-title" class="text-xl font-black font-display text-white">Company Name</h2>
+        </div>
+        <div class="max-h-[300px] overflow-y-auto pr-2 text-sm text-slate-300 leading-relaxed font-normal whitespace-pre-wrap" id="about-modal-content">
+            About company details here...
+        </div>
+        <div class="flex justify-end">
+            <button onclick="closeAboutModal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl cursor-pointer transition-all">
+                Dismiss
+            </button>
+        </div>
+        <button onclick="closeAboutModal()" class="absolute top-5 right-5 w-7 h-7 rounded-full border border-slate-800 hover:border-slate-700 hover:text-white bg-slate-950/60 text-slate-500 flex items-center justify-center text-xs font-bold cursor-pointer select-none transition-all">
+            &times;
+        </button>
+    </div>
+</div>
+
+<script>
+    function openAboutModal(companyName, aboutText) {
+        document.getElementById('about-modal-title').textContent = companyName;
+        document.getElementById('about-modal-content').textContent = aboutText;
+        document.getElementById('about-company-modal').classList.remove('hidden');
+    }
+    function closeAboutModal() {
+        document.getElementById('about-company-modal').classList.add('hidden');
+    }
+    document.getElementById('about-company-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeAboutModal();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire Dashboard | Candidate Command Center{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in">
+    <!-- Header Greeting and Profile Completeness Indicator -->
+    <div class="bg-slate-900/40 p-6 rounded-3xl border border-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div class="space-y-1.5">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-indigo-400">Trainee Portal</span>
+            <h1 class="text-2xl sm:text-3xl font-black font-display tracking-tight text-white">
+                Welcome back, {{ trainee.user.first_name|default:trainee.user.username }}!
+            </h1>
+            <p class="text-sm text-slate-400">Batch Code: <span class="font-mono font-medium text-slate-300">{{ trainee.batch_code }}</span> | Course Domain: <span class="text-slate-350">{{ trainee.get_degree_display }} ({{ trainee.branch }})</span></p>
+        </div>
+        <div class="shrink-0">
+            <a href="{% url 'students:analytics' %}" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all shadow-lg cursor-pointer whitespace-nowrap">
+                View My Analytics
+            </a>
+        </div>
+    </div>
+
+    <!-- Phase 2 Cards Array: Pipelines Counters -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <!-- Jobs Applied -->
+        <a href="{% url 'applications:tracking' %}" class="bg-slate-900/20 hover:bg-slate-900/35 border border-slate-900 hover:border-indigo-500/30 rounded-2xl p-5 sm:p-6 transition-all hover:-translate-y-0.5 shadow-lg group block">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold text-slate-500 group-hover:text-indigo-400 transition-colors uppercase">Jobs Applied</span>
+                <span class="text-xs font-mono font-bold text-indigo-400/80 bg-indigo-500/5 px-2 py-0.5 rounded border border-indigo-500/10">Active</span>
+            </div>
+            <p class="text-3xl sm:text-4xl font-extrabold font-display text-white mt-4">{{ applied_count }}</p>
+            <p class="text-[10px] text-slate-500 mt-1">Submitted applications</p>
+        </a>
+
+        <!-- Shortlisted -->
+        <a href="{% url 'applications:tracking' %}?status=SHORTLISTED" class="bg-slate-900/20 hover:bg-slate-900/35 border border-slate-900 hover:border-cyan-500/30 rounded-2xl p-5 sm:p-6 transition-all hover:-translate-y-0.5 shadow-lg group block">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold text-slate-500 group-hover:text-cyan-400 transition-colors uppercase">Shortlisted</span>
+                <span class="text-xs font-mono font-bold text-cyan-400/80 bg-cyan-500/5 px-2 py-0.5 rounded border border-cyan-500/10">Passes</span>
+            </div>
+            <p class="text-3xl sm:text-4xl font-extrabold font-display text-white mt-4">{{ shortlisted_count }}</p>
+            <p class="text-[10px] text-slate-500 mt-1">Academic shortlists</p>
+        </a>
+
+        <!-- Scheduled Interviews -->
+        <a href="{% url 'interviews:student_dashboard' %}" class="bg-slate-900/20 hover:bg-slate-900/35 border border-slate-900 hover:border-amber-500/30 rounded-2xl p-5 sm:p-6 transition-all hover:-translate-y-0.5 shadow-lg group block">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold text-slate-500 group-hover:text-amber-400 transition-colors uppercase">Interviews</span>
+                <span class="text-xs font-mono font-bold text-amber-400/80 bg-amber-500/5 px-2 py-0.5 rounded border border-amber-500/10">Scheduled</span>
+            </div>
+            <p class="text-3xl sm:text-4xl font-extrabold font-display text-white mt-4">{{ interviews_count }}</p>
+            <p class="text-[10px] text-slate-500 mt-1">Pending evaluative rounds</p>
+        </a>
+
+        <!-- Offers Received -->
+        <a href="{% url 'applications:tracking' %}?status=OFFER_EXTENDED" class="bg-slate-900/20 hover:bg-slate-900/35 border border-slate-900 hover:border-emerald-500/30 rounded-2xl p-5 sm:p-6 transition-all hover:-translate-y-0.5 shadow-lg group block">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold text-slate-500 group-hover:text-emerald-400 transition-colors uppercase">Offers Extended</span>
+                <span class="text-xs font-mono font-bold text-emerald-400/80 bg-emerald-500/5 px-2 py-0.5 rounded border border-emerald-500/10">Hired</span>
+            </div>
+            <p class="text-3xl sm:text-4xl font-extrabold font-display text-white mt-4">{{ offers_count }}</p>
+            <p class="text-[10px] text-slate-500 mt-1">Hiring letters distributed</p>
+        </a>
+    </div>
+
+    <!-- Main Content bento grid arrangement (3 cols layout) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left: Recommended Jobs Feed (7/12 cols) -->
+        <div class="lg:col-span-8 space-y-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-black font-display text-white flex items-center gap-2">
+                    <span class="w-1.5 h-4 bg-indigo-500 rounded"></span> Recommended Openings
+                </h2>
+                <a href="{% url 'jobs:feed' %}" class="text-xs font-semibold text-indigo-400 hover:text-indigo-350 flex items-center gap-1 transition-colors">
+                    Browse all feeds</a>
+            </div>
+
+            <!-- List box -->
+            <div class="space-y-4">
+                {% if recommended_jobs %}
+                    {% for job in recommended_jobs %}
+                    <div class="bg-slate-900/15 border border-slate-900 hover:border-slate-800 rounded-2xl p-5 flex flex-col justify-between gap-4 transition-all hover:bg-slate-900/25">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="space-y-1">
+                                <span class="text-[9px] font-mono font-extrabold uppercase bg-slate-900 border border-slate-800 text-slate-400 px-2.0 py-0.5 rounded">
+                                    {{ job.get_job_type_display|default:"Full-Time" }}
+                                </span>
+                                <h3 class="text-base font-bold text-white mt-1.5 hover:text-indigo-400 transition-colors font-sans">{{ job.title }}</h3>
+                                <p class="text-xs text-slate-400 font-medium">{{ job.recruiter.company_name }}</p>
+                            </div>
+                            
+                            <span class="text-sm font-black font-sans text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-3.5 py-1 rounded-xl">
+                                {{ job.salary_package }}
+                            </span>
+                        </div>
+
+                        <!-- Job Description -->
+                        {% if job.description %}
+                        <p class="text-xs text-slate-400 leading-relaxed font-sans pr-4">
+                            {% if job.description|length > 150 %}
+                                {{ job.description|slice:":150" }}...
+                                <button type="button"
+                                        class="text-indigo-400 hover:text-indigo-300 font-bold hover:underline cursor-pointer ml-1 select-none whitespace-nowrap"
+                                        data-job-title="{{ job.title|escape }}"
+                                        data-job-type="{{ job.get_job_type_display|escape }}"
+                                        data-location="{{ job.location|escape }}"
+                                        data-salary="{{ job.salary_package|escape }}"
+                                        data-deadline="{{ job.application_deadline|date:'M d, Y'|escape }}"
+                                        data-description="{{ job.description|escape }}"
+                                        data-skills="{% for skill in job.skills_required %}{{ skill }}{% if not forloop.last %}, {% endif %}{% endfor %}"
+                                        data-courses="{% for course in job.required_courses.all %}{{ course.name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
+                                        data-company-name="{{ job.recruiter.company_name|escape }}"
+                                        data-company-domain="{{ job.recruiter.industry_domain|escape }}"
+                                        data-company-website="{{ job.recruiter.company_website|default:''|escape }}"
+                                        data-company-about="{{ job.recruiter.about_company|default:'No description shared.'|escape }}"
+                                        onclick="openJobDetailModal(this)">
+                                    Learn More
+                                </button>
+                            {% else %}
+                                {{ job.description }}
+                            {% endif %}
+                        </p>
+                        {% endif %}
+
+                        <!-- Job specs attributes -->
+                        <div class="flex flex-wrap items-center gap-4 text-xs text-slate-400 border-t border-slate-900/60 pt-3">
+                            <span class="flex items-center gap-1 text-[11px]"><strong class="text-slate-300">CGPA Req:</strong> {{ job.min_cgpa_required }}+</span>
+                            <span class="flex items-center gap-1 text-[11px]"><strong class="text-slate-300">Location:</strong> {{ job.location }}</span>
+                            <span class="flex items-center gap-1 text-[11px]"><strong class="text-slate-300">Deadline:</strong> {{ job.application_deadline|date:"M d, Y" }}</span>
+                        </div>
+
+                        <!-- Skills requirement tags -->
+                        <div class="flex flex-wrap gap-1.5">
+                            {% for skill in job.skills_required %}
+                                <span class="text-[9.5px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800/80">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Application action CTA -->
+                        <div class="flex items-center justify-end mt-1">
+                            {% if job.id in applied_job_ids %}
+                                <button class="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 text-xs font-semibold cursor-default select-none" disabled>
+                                    ✓ Applied
+                                </button>
+                            {% elif trainee.cgpa < job.min_cgpa_required %}
+                                <button class="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 text-xs font-semibold cursor-not-allowed select-none" title="Your CGPA does not meet the minimum requirement" disabled>
+                                    CGPA Ineligible
+                                </button>
+                            {% elif job.id not in course_eligible_job_ids %}
+                                <button class="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 text-xs font-semibold cursor-not-allowed select-none" title="Your enrolled courses do not match the required courses for this job" disabled>
+                                    Course Ineligible
+                                </button>
+                            {% elif job.id not in experience_eligible_job_ids %}
+                                <button class="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 text-xs font-semibold cursor-not-allowed select-none" title="Your experience does not meet the minimum requirement" disabled>
+                                    Experience Ineligible
+                                </button>
+                            {% else %}
+                                <a href="{% url 'applications:apply' job.id %}" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs transition-all flex items-center gap-1">
+                                    Apply Now
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="bg-slate-900/10 border border-slate-900 py-12 px-6 rounded-2xl text-center space-y-2">
+                        <p class="text-sm text-slate-500">No specific customized roles matches your profile metrics at this moment.</p>
+                        <a href="{% url 'trainees:profile' %}" class="text-xs text-indigo-400 font-semibold underline">Configure and add skills to profile</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Side: Recent Activity and Notifications (4/12 cols) -->
+        <div class="lg:col-span-4 space-y-8">
+            
+
+
+            <!-- Recent Activity Stream -->
+            <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-5 space-y-4">
+                <h2 class="text-sm font-black font-display text-white border-b border-slate-900 pb-3">
+                    Academic Activity Stream
+                </h2>
+
+                <div class="space-y-4">
+                    {% if recent_activities %}
+                        {% for act in recent_activities %}
+                        <div class="flex items-start gap-3 text-xs leading-normal">
+                            <!-- bullet index -->
+                            <div class="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 bg-indigo-500"></div>
+                            
+                            <div class="space-y-0.5 flex-grow">
+                                <p class="text-slate-200 font-bold leading-normal">{{ act.title }}</p>
+                                <p class="text-[10px] text-slate-400">{{ act.subtitle }}</p>
+                                <span class="text-[9px] font-mono text-slate-500">{{ act.timestamp|date:"M d, P" }}</span>
+                            </div>
+
+                            <span class="text-[9.5px] font-semibold {{ act.color }} font-mono whitespace-nowrap shrink-0 border border-slate-800/80 px-1.5 py-0.5 rounded bg-slate-900/30">
+                                {{ act.status }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-xs text-slate-500 text-center py-4 font-mono font-light">No recent applications submission activities recorded.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

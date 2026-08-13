@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire | AI Mock Interview{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in text-left max-w-4xl mx-auto">
+    <!-- Header title -->
+    <div class="space-y-1.5 border-b border-slate-900 pb-4">
+        <h1 class="text-xl sm:text-2xl font-black font-display text-white flex items-center gap-2">
+            AI Mock Interview Simulator
+        </h1>
+        <p class="text-xs text-slate-400">Practice role-based technical challenges. Submit your answers and receive instant scoring analysis with constructive feedback.</p>
+    </div>
+
+    <!-- Step 0: Choose Career Role -->
+    {% if step == 0 %}
+        <div class="bg-slate-950 border border-slate-900 rounded-3xl p-6 sm:p-8 max-w-xl mx-auto space-y-6 shadow-xl">
+            <div class="space-y-1 text-center border-b border-slate-900 pb-4">
+                <span class="text-3xl"></span>
+                <h3 class="text-sm font-black font-display text-white uppercase tracking-wider mt-2">Initialize Simulation Session</h3>
+                <p class="text-[11px] text-slate-500">Select or write your target professional role to custom-tailor interview prompts.</p>
+            </div>
+
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-350">Target Job Role</label>
+                    <input 
+                        type="text" 
+                        name="role_title" 
+                        id="role_title" 
+                        required
+                        placeholder="e.g. Python Developer, Fullstack Engineer, Data Analyst"
+                        class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 placeholder-slate-650 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    >
+                </div>
+
+                <!-- Suggestion tags -->
+                <div class="space-y-1.5">
+                    <span class="text-[10px] text-slate-500 font-mono">Popular Roles:</span>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button type="button" onclick="document.getElementById('role_title').value = this.innerText" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-850 border border-slate-800 text-[10px] text-slate-400 cursor-pointer font-medium">Python Developer</button>
+                        <button type="button" onclick="document.getElementById('role_title').value = this.innerText" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-850 border border-slate-800 text-[10px] text-slate-400 cursor-pointer font-medium">Java Developer</button>
+                        <button type="button" onclick="document.getElementById('role_title').value = this.innerText" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-850 border border-slate-800 text-[10px] text-slate-400 cursor-pointer font-medium">Data Analyst</button>
+                        <button type="button" onclick="document.getElementById('role_title').value = this.innerText" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-850 border border-slate-800 text-[10px] text-slate-400 cursor-pointer font-medium">Frontend Engineer</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white transition-all shadow-lg shadow-indigo-600/10 cursor-pointer text-center select-none">
+                    Start Mock Session
+                </button>
+            </form>
+        </div>
+
+    <!-- Steps 1, 2, 3: Active Question Form -->
+    {% elif step == 1 or step == 2 or step == 3 %}
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+            <!-- Left: Dialog box -->
+            <div class="md:col-span-8 bg-slate-950 border border-slate-900 rounded-3xl p-6 space-y-6 shadow-xl">
+                <!-- Status header -->
+                <div class="flex items-center justify-between border-b border-slate-900 pb-3">
+                    <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-400">Mocking: {{ role }}</span>
+                    <span class="text-[10px] font-mono font-bold text-slate-500">Round {{ step }} of 3</span>
+                </div>
+
+                <!-- Question Text -->
+                <div class="space-y-2 bg-indigo-950/10 border border-indigo-900/20 p-5 rounded-2xl">
+                    <span class="text-[9px] font-mono font-bold uppercase tracking-wider text-indigo-400">AI Recruiter Question:</span>
+                    <p class="text-xs sm:text-sm font-semibold text-slate-200 leading-relaxed font-sans">{{ question }}</p>
+                </div>
+
+                <!-- Answer Form -->
+                <form method="POST" class="space-y-4" onsubmit="document.getElementById('evaluation-spinner').classList.remove('hidden');">
+                    {% csrf_token %}
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-slate-400">Your Technical Response</label>
+                        <textarea 
+                            name="answer" 
+                            required
+                            rows="6"
+                            placeholder="Write your explanation or code solution here..."
+                            class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-xs text-slate-100 placeholder-slate-650 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-sans"
+                        ></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-4 pt-2">
+                        <span class="text-[10px] text-slate-500 font-mono">Answers are evaluated on accuracy and clarity</span>
+                        <button type="submit" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white transition-all shadow-lg shadow-indigo-600/10 cursor-pointer text-center select-none">
+                            Submit Answer</button>
+                    </div>
+                </form>
+
+                <!-- Processing Spinner -->
+                <div id="evaluation-spinner" class="hidden p-4 bg-slate-900 border border-indigo-900/25 rounded-2xl text-center space-y-2 animate-pulse">
+                    <div class="flex justify-center">
+                        <div class="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-indigo-500"></div>
+                    </div>
+                    <span class="text-[10.5px] font-bold text-indigo-400 block">AI evaluating answer & generating next question...</span>
+                </div>
+            </div>
+
+            <!-- Right: Instructions and guidelines -->
+            <div class="md:col-span-4 space-y-6">
+                <div class="bg-slate-950 border border-slate-900 rounded-3xl p-5 space-y-4">
+                    <h4 class="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 border-b border-slate-900 pb-2">Guidelines</h4>
+                    <ul class="space-y-2 text-[10.5px] text-slate-500 list-none m-0 p-0 leading-relaxed">
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-indigo-500"></span>
+                            <span>Be specific: Provide concrete architectural patterns or code syntaxes.</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-indigo-500"></span>
+                            <span>Take your time: Structuring answers logically helps Gemini evaluate accuracy accurately.</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                            <span class="text-indigo-500"></span>
+                            <span>Completeness: 3 rounds of questions compile the final technical and communication scores.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    <!-- Step 4: Finished / Results Compilation -->
+    {% else %}
+        <div class="space-y-8">
+            <!-- Overview Summary card -->
+            <div class="bg-slate-950 border border-slate-900 rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl">
+                <div class="space-y-1.5 text-left">
+                    <span class="text-[9px] font-mono font-bold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/10">Report card</span>
+                    <h3 class="text-lg font-bold text-white">Mock Session Results: {{ role }}</h3>
+                    <p class="text-xs text-slate-400">Evaluations processed across all 3 rounds of dialogue challenges.</p>
+                </div>
+
+                <div class="flex items-center gap-6">
+                    <div class="text-center space-y-1 bg-slate-900/40 p-4 rounded-2xl border border-slate-900 min-w-[100px]">
+                        <span class="text-2xl font-black text-indigo-400 font-mono">{{ avg_score }}</span>
+                        <p class="text-[8px] font-mono uppercase tracking-wider text-slate-500">Average Score</p>
+                    </div>
+                    
+                    <form method="POST" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reset">
+                        <button type="submit" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white transition-all cursor-pointer">
+                            Start New Session
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Dialogue History Logs -->
+            <div class="space-y-4">
+                <h3 class="text-sm font-black font-display text-white text-left">Round Details & Scoring</h3>
+                <div class="space-y-4">
+                    {% for q, a, s, f in interview_history %}
+                        <div class="bg-slate-950 border border-slate-900 rounded-3xl p-6 space-y-4 text-left">
+                            <div class="flex items-center justify-between border-b border-slate-900 pb-2">
+                                <span class="text-xs font-bold text-slate-400">Round {{ forloop.counter }}</span>
+                                <span class="text-xs font-bold font-mono 
+                                    {% if s >= 80 %}text-emerald-400
+                                    {% elif s >= 60 %}text-amber-400
+                                    {% else %}text-rose-455{% endif %}">
+                                    Score: {{ s }}/100
+                                </span>
+                            </div>
+
+                            <!-- Q & A -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11.5px] font-sans leading-relaxed">
+                                <div class="space-y-1 bg-slate-900/30 p-4 rounded-xl border border-slate-900">
+                                    <span class="text-[9.5px] font-mono font-bold uppercase tracking-wider text-slate-500">Question</span>
+                                    <p class="text-slate-300">{{ q }}</p>
+                                </div>
+                                <div class="space-y-1 bg-slate-900/30 p-4 rounded-xl border border-slate-900">
+                                    <span class="text-[9.5px] font-mono font-bold uppercase tracking-wider text-slate-500">Your Answer</span>
+                                    <p class="text-slate-350 italic">"{{ a }}"</p>
+                                </div>
+                            </div>
+
+                            <!-- AI Feedback -->
+                            <div class="bg-indigo-950/5 border border-indigo-900/20 p-4 rounded-xl text-xs space-y-1">
+                                <span class="text-[9.5px] font-mono font-bold uppercase tracking-wider text-indigo-400 block">AI Feedback Summary</span>
+                                <p class="text-slate-400 font-sans leading-relaxed">{{ f }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

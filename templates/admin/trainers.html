@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire Admin | Trainer Approvals{% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in text-left">
+    <!-- Header banner -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-900 pb-5">
+        <div class="space-y-1">
+            <h1 class="text-xl sm:text-2xl font-black font-display text-white">
+                Trainer Verification
+            </h1>
+            <p class="text-xs text-slate-400">Review placement trainer profiles, verify educational credentials, and approve or reject administration authorization.</p>
+        </div>
+    </div>
+
+    <!-- Trainers Table List -->
+    <div class="bg-slate-900/10 border border-slate-900 rounded-3xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="border-b border-slate-900 text-slate-500 font-mono bg-slate-950/40">
+                        <th class="p-4 font-bold">Trainer Email</th>
+                        <th class="p-4 font-bold">Handled Courses</th>
+                        <th class="p-4 font-bold">Joined Date</th>
+                        <th class="p-4 font-bold">Verification Status</th>
+                        <th class="p-4 font-bold">Account Access</th>
+                        <th class="p-4 font-bold text-right">Actions Panel</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-900/60">
+                    {% for trainer in trainers %}
+                        <tr class="hover:bg-slate-900/15 {% if not trainer.user.is_active %}opacity-60{% endif %}">
+                            <td class="p-4">
+                                <span class="font-bold text-slate-100 block">{{ trainer.user.get_full_name|default:trainer.user.email }}</span>
+                                <span class="text-[10px] text-slate-500 block font-mono">{{ trainer.user.email }}</span>
+                            </td>
+                            <td class="p-4">
+                                <div class="flex flex-wrap gap-1">
+                                    {% for course in trainer.courses_handled.all %}
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-medium">
+                                            {{ course.name }}
+                                        </span>
+                                    {% empty %}
+                                        <span class="text-slate-500 italic text-[10px]">None specified</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="p-4 text-slate-350">{{ trainer.created_at|date:"M d, Y" }}</td>
+                            <td class="p-4 font-bold">
+                                <span class="px-2 py-1 rounded border uppercase text-[9.5px] whitespace-nowrap inline-block
+                                    {% if trainer.is_approved %}bg-emerald-500/10 border-emerald-500/25 text-emerald-400
+                                    {% else %}bg-rose-500/10 border-rose-500/25 text-rose-455{% endif %}">
+                                    {{ trainer.is_approved|yesno:"Approved,Awaiting Verification" }}
+                                </span>
+                            </td>
+                            <td class="p-4 font-bold">
+                                <span class="px-2 py-1 rounded border uppercase text-[9.5px]
+                                    {% if trainer.user.is_active %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                                    {% else %}bg-rose-500/10 border-rose-500/20 text-rose-455{% endif %}">
+                                    {{ trainer.user.is_active|yesno:"Active,Deactivated" }}
+                                </span>
+                            </td>
+                            <td class="p-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <!-- Approval Actions -->
+                                    {% if not trainer.is_approved %}
+                                        <form method="POST" action="" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="officer_id" value="{{ trainer.id }}">
+                                            <input type="hidden" name="action" value="approve">
+                                            <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10.5px] cursor-pointer transition-all">
+                                                Approve
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <form method="POST" action="" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="officer_id" value="{{ trainer.id }}">
+                                            <input type="hidden" name="action" value="reject">
+                                            <button type="submit" class="px-3 py-1.5 rounded-lg border border-red-900 hover:bg-red-950/20 text-red-400 text-[10.5px] cursor-pointer transition-all" onclick="return confirm('Revoke verification for this placement trainer?')">
+                                                Disapprove
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                    
+                                    <!-- Active/Deactivate Actions -->
+                                    <form method="POST" action="" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="officer_id" value="{{ trainer.id }}">
+                                        <input type="hidden" name="action" value="toggle_active">
+                                        <button type="submit" class="px-3 py-1.5 rounded-lg border text-[10.5px] font-bold cursor-pointer transition-all
+                                            {% if trainer.user.is_active %}border-red-950 bg-red-950/15 hover:bg-red-950/30 text-red-400
+                                            {% else %}border-emerald-950 bg-emerald-950/15 hover:bg-emerald-950/30 text-emerald-400{% endif %}"
+                                            onclick="return confirm('Change access authorization status for this placement trainer?')">
+                                            {{ trainer.user.is_active|yesno:"Deactivate,Activate" }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="p-12 text-center text-slate-500 font-mono">No placement trainers registered.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

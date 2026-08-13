@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}Resume Match Analyser | NextHire{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8 animate-fade-in text-left">
+    <!-- Header banner -->
+    <div class="bg-slate-900/40 p-6 rounded-3xl border border-slate-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div class="space-y-1">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-indigo-400">Application Pipeline Workspace</span>
+            <h1 class="text-2xl font-black font-display text-white">Apply for Role</h1>
+            <p class="text-xs text-slate-400">Validate resume relevance and match skills before final submission.</p>
+        </div>
+        <a href="{% url 'jobs:feed' %}" class="px-4 py-2 border border-slate-800 hover:border-slate-700 bg-slate-900/20 rounded-xl text-xs font-bold text-slate-350 hover:text-white transition-all">
+            &larr; Back to Hiring Feed
+        </a>
+    </div>
+
+    <!-- Job Opening Details -->
+    <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 space-y-4">
+        <div class="flex items-start justify-between gap-4 border-b border-slate-900/80 pb-4">
+            <div class="space-y-1">
+                <span class="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded uppercase bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                    {{ job.get_job_type_display }}
+                </span>
+                <h2 class="text-xl font-bold text-white mt-1.5 font-sans">{{ job.title }}</h2>
+                <p class="text-xs text-indigo-400 font-semibold">{{ job.recruiter.company_name }} &bull; <span class="text-slate-400 font-mono text-[11px]">{{ job.location }}</span></p>
+            </div>
+            <span class="text-sm font-black text-emerald-450 bg-emerald-500/5 border border-emerald-500/10 px-3.5 py-1 rounded-xl">
+                {{ job.salary_package }}
+            </span>
+        </div>
+
+        <div class="space-y-2">
+            <h4 class="text-xs font-mono text-slate-500 uppercase font-black">Job Description summary:</h4>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line">{{ job.description }}</p>
+        </div>
+
+        {% if job.skills_required %}
+        <div class="pt-2 border-t border-slate-900/40">
+            <h4 class="text-xs font-mono text-slate-500 uppercase font-black mb-2">Required Skills Checklist:</h4>
+            <div class="flex flex-wrap gap-1.5">
+                {% for skill in job.skills_required %}
+                <span class="text-xs font-mono bg-slate-950 border border-slate-900 px-3 py-1 rounded-lg text-slate-400 font-medium">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Phase Container -->
+    <div class="space-y-6">
+            {% if not analysis_results %}
+                <!-- PHASE 1: Resume Upload & Analysis -->
+                <div class="bg-slate-900/20 border border-slate-900 rounded-3xl p-6 space-y-6">
+                    <div class="space-y-1.5">
+                        <span class="text-[10px] font-mono font-bold uppercase text-indigo-400 bg-indigo-500/5 border border-indigo-500/10 px-2 py-0.5 rounded">Phase 1</span>
+                        <h3 class="text-lg font-bold text-white font-sans">Resume Match Analysis</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Upload your resume document in PDF or Word (.docx) format. Our matching engine will compare it to the target job description to check matching keywords and suggest improvements.
+                        </p>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data" class="space-y-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="analyze">
+                        
+                        <div class="border-2 border-dashed border-slate-800 hover:border-indigo-500/40 rounded-2xl p-8 text-center bg-slate-950/40 transition-all group relative cursor-pointer">
+                            <input type="file" name="resume_file" id="resume_file" required accept=".pdf,.docx"
+                                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            <div class="space-y-3">
+                                <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400 group-hover:scale-105 transition-all">
+                                    📄
+                                </div>
+                                <div class="space-y-1">
+                                    <p class="text-xs font-bold text-slate-200">Click or Drag & Drop Resume</p>
+                                    <p class="text-[10px] text-slate-500">Supports PDF (.pdf) or Word (.docx) &bull; Max 5MB</p>
+                                </div>
+                                <p id="file-selected-name" class="text-xs text-indigo-400 font-mono font-semibold hidden"></p>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full py-3 bg-indigo-650 hover:bg-indigo-600 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-indigo-900/35 cursor-pointer">
+                            Run AI Match Analysis
+                        </button>
+                    </form>
+                </div>
+
+            {% else %}
+                <!-- PHASE 1 FEEDBACK & PHASE 2 FINAL SUBMISSION -->
+                <div class="bg-slate-900/20 border border-slate-900 rounded-3xl p-6 space-y-6">
+                    <div class="flex items-center justify-between flex-wrap gap-4 border-b border-slate-900 pb-4">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-mono font-bold uppercase text-indigo-400 bg-indigo-500/5 border border-indigo-500/10 px-2 py-0.5 rounded">Phase 1 Results</span>
+                            <h3 class="text-lg font-bold text-white font-sans">Resume Feedback & Analysis</h3>
+                            <p class="text-[11px] text-slate-450 font-mono">Analyzed File: <span class="text-slate-300 font-semibold">{{ temp_resume_name }}</span></p>
+                        </div>
+                        <form method="post" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="clear_analysis">
+                            <button type="submit" class="px-3 py-1.5 border border-slate-800 hover:border-slate-700 bg-slate-900/30 text-slate-400 hover:text-white rounded-lg text-[10.5px] font-bold transition-all cursor-pointer">
+                                Re-Upload Version &rarr;
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Match score meter -->
+                    <div class="bg-slate-950/60 rounded-2xl border border-slate-900 p-4 flex items-center justify-between gap-4">
+                        <div class="space-y-1">
+                            <h4 class="text-xs font-bold text-slate-200">Matching Relevance</h4>
+                            <p class="text-[10.5px] text-slate-500 leading-normal">
+                                Semantic similarity rating between your resume descriptions and corporate job specification parameters.
+                            </p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="inline-flex items-center justify-center p-3 rounded-xl bg-indigo-500/10 text-indigo-400 font-mono text-base font-extrabold border border-indigo-500/20">
+                                {{ analysis_results.similarity_score }}%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Matching vs Missing Skills -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Matching Skills (Green) -->
+                        <div class="bg-emerald-950/10 border border-emerald-900/30 rounded-2xl p-4 space-y-2.5">
+                            <h4 class="text-xs font-mono font-bold text-emerald-400 uppercase flex items-center gap-1.5">
+                                <span>✓</span> Matching Skills ({{ analysis_results.matching_skills|length }})
+                            </h4>
+                            <div class="flex flex-wrap gap-1">
+                                {% for skill in analysis_results.matching_skills %}
+                                <span class="text-[10px] bg-emerald-500/10 border border-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded font-mono font-medium">{{ skill }}</span>
+                                {% empty %}
+                                <span class="text-[10.5px] text-slate-500 font-mono italic">No skills overlap discovered.</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Missing Skills (Red) -->
+                        <div class="bg-rose-950/10 border border-rose-900/30 rounded-2xl p-4 space-y-2.5">
+                            <h4 class="text-xs font-mono font-bold text-rose-450 uppercase flex items-center gap-1.5">
+                                <span>✗</span> Missing Skills ({{ analysis_results.missing_skills|length }})
+                            </h4>
+                            <div class="flex flex-wrap gap-1">
+                                {% for skill in analysis_results.missing_skills %}
+                                <span class="text-[10px] bg-rose-550/10 border border-rose-550/15 text-rose-450 px-2 py-0.5 rounded font-mono font-medium">{{ skill }}</span>
+                                {% empty %}
+                                <span class="text-[10.5px] text-emerald-400 font-mono font-semibold">Perfect required skills match!</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sentence Level Improvements -->
+                    {% if analysis_results.sentence_improvements %}
+                    <div class="space-y-3 pt-2">
+                        <h4 class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                            📝 Sentences to Improve in Your Resume
+                        </h4>
+                        <div class="space-y-3">
+                            {% for item in analysis_results.sentence_improvements %}
+                            <div class="bg-slate-950/40 border border-slate-900 rounded-2xl p-4 space-y-3 text-left">
+                                <div class="text-[9.5px] font-mono text-slate-500 flex items-center gap-1.5">
+                                    <span class="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-850 text-slate-400">Sentence {{ forloop.counter }}</span>
+                                    <span>&bull;</span>
+                                    <span class="text-indigo-400 font-semibold">{{ item.reason }}</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                                    <div class="space-y-1 bg-rose-500/5 border border-rose-500/10 p-3 rounded-xl">
+                                        <span class="text-[9px] font-mono font-bold text-rose-450 block">CURRENT SENTENCE:</span>
+                                        <p class="text-slate-400 italic">"{{ item.original }}"</p>
+                                    </div>
+                                    <div class="space-y-1 bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl">
+                                        <span class="text-[9px] font-mono font-bold text-emerald-400 block">SUGGESTED REWRITE:</span>
+                                        <p class="text-slate-200 font-medium">"{{ item.suggestion }}"</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Missing Skill Additions -->
+                    {% if analysis_results.missing_suggestions %}
+                    <div class="space-y-3 pt-2">
+                        <h4 class="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                            ➕ Recommended Additions for Missing Skills
+                        </h4>
+                        <div class="space-y-2.5">
+                            {% for item in analysis_results.missing_suggestions %}
+                            <div class="bg-slate-950/20 border border-slate-900 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+                                <div class="space-y-1 text-left">
+                                    <span class="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded bg-rose-550/10 border border-rose-550/20 text-rose-400 uppercase">
+                                        Missing: {{ item.skill }}
+                                    </span>
+                                    <p class="text-xs text-slate-300 font-medium italic mt-1">"{{ item.suggested_text }}"</p>
+                                </div>
+                                <button type="button" 
+                                        onclick="navigator.clipboard.writeText('{{ item.suggested_text|escapejs }}'); alert('Suggested sentence copied to clipboard!');" 
+                                        class="px-3.5 py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-350 hover:text-white rounded-xl text-[10px] font-bold font-mono transition-all duration-150 shrink-0 cursor-pointer flex items-center gap-1 select-none">
+                                    Copy Text
+                                </button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- PHASE 2: Upload Final Improved Resume -->
+                    <div class="border-t border-slate-900 pt-6 space-y-4">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-mono font-bold uppercase text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-2 py-0.5 rounded">Phase 2</span>
+                            <h3 class="text-sm font-bold text-white font-sans">Final Application Submission</h3>
+                            <p class="text-xs text-slate-400 leading-relaxed">
+                                Upload your **final improved resume** document addressing the feedback above. This version will be forwarded to the recruiter panel for screening, and analysis feedback won't be shown again.
+                            </p>
+                        </div>
+
+                        <form method="post" enctype="multipart/form-data" class="space-y-4">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="finalize">
+
+                            <div class="border-2 border-dashed border-slate-800 hover:border-emerald-500/40 rounded-2xl p-6 text-center bg-slate-950/40 transition-all group relative cursor-pointer">
+                                <input type="file" name="final_resume_file" id="final_resume_file" required accept=".pdf,.docx"
+                                       class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                <div class="space-y-2">
+                                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400 group-hover:scale-105 transition-all">
+                                        ✓
+                                    </div>
+                                    <div class="space-y-0.5">
+                                        <p class="text-xs font-bold text-slate-200">Select Final Improved Resume</p>
+                                        <p class="text-[9.5px] text-slate-500">Upload PDF (.pdf) or Word (.docx) to finalize</p>
+                                    </div>
+                                    <p id="final-file-name" class="text-xs text-emerald-400 font-mono font-semibold hidden"></p>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-emerald-950/35 cursor-pointer">
+                                Submit Final Resume & Apply
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const resumeFile = document.getElementById("resume_file");
+        const fileSelectedName = document.getElementById("file-selected-name");
+        
+        if (resumeFile) {
+            resumeFile.addEventListener("change", function() {
+                if (resumeFile.files.length > 0) {
+                    fileSelectedName.textContent = "Selected: " + resumeFile.files[0].name;
+                    fileSelectedName.classList.remove("hidden");
+                } else {
+                    fileSelectedName.classList.add("hidden");
+                }
+            });
+        }
+
+        const finalResumeFile = document.getElementById("final_resume_file");
+        const finalFileName = document.getElementById("final-file-name");
+
+        if (finalResumeFile) {
+            finalResumeFile.addEventListener("change", function() {
+                if (finalResumeFile.files.length > 0) {
+                    finalFileName.textContent = "Selected: " + finalResumeFile.files[0].name;
+                    finalFileName.classList.remove("hidden");
+                } else {
+                    finalFileName.classList.add("hidden");
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

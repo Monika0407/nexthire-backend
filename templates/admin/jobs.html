@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire Admin | Job Vacancy Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in text-left">
+    <!-- Header banner -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-900 pb-5">
+        <div class="space-y-1">
+            <h1 class="text-xl sm:text-2xl font-black font-display text-white">
+                Job Vacancy Management
+            </h1>
+            <p class="text-xs text-slate-400">View, audit, edit and remove job postings across the entire platform. Filter vacancies by open or closed status.</p>
+        </div>
+
+        <!-- Filter controls -->
+        <div class="flex items-center gap-1.5 bg-slate-950/40 p-1 rounded-xl border border-slate-900 text-xs font-mono">
+            <a href="?status=" class="px-3 py-1.5 rounded-lg transition-all {% if not status_filter %}bg-indigo-600 text-white font-bold{% else %}text-slate-400 hover:text-white{% endif %}">
+                All Jobs
+            </a>
+            <a href="?status=open" class="px-3 py-1.5 rounded-lg transition-all {% if status_filter == 'open' %}bg-indigo-600 text-white font-bold{% else %}text-slate-400 hover:text-white{% endif %}">
+                Open
+            </a>
+            <a href="?status=closed" class="px-3 py-1.5 rounded-lg transition-all {% if status_filter == 'closed' %}bg-indigo-600 text-white font-bold{% else %}text-slate-400 hover:text-white{% endif %}">
+                Closed
+            </a>
+        </div>
+    </div>
+
+    <!-- View Job Details Workspace overlay if selected -->
+    {% if edit_job %}
+        <div class="bg-indigo-950/10 border border-indigo-900/30 p-6 rounded-3xl space-y-5 text-left">
+            <div class="flex justify-between items-start border-b border-indigo-950 pb-3">
+                <div class="space-y-1">
+                    <span class="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/10 uppercase">Job Details Vault</span>
+                    <h3 class="text-lg font-bold text-white font-sans">{{ edit_job.title }}</h3>
+                    <p class="text-xs text-slate-400">Recruiter: <strong class="text-slate-200">{{ edit_job.recruiter.company_name }}</strong></p>
+                </div>
+                <a href="?status={{ status_filter }}" class="text-xs text-slate-500 hover:text-white">&times; Close Details</a>
+            </div>
+
+            <!-- Specs Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 bg-slate-950/20 p-5 rounded-2xl border border-slate-900">
+                <div class="space-y-1">
+                    <span class="text-[10px] text-slate-500 font-mono uppercase block">Job Type</span>
+                    <span class="text-xs font-bold text-slate-200">{{ edit_job.get_job_type_display }}</span>
+                </div>
+                <div class="space-y-1">
+                    <span class="text-[10px] text-slate-500 font-mono uppercase block">Location</span>
+                    <span class="text-xs font-bold text-slate-200">{{ edit_job.location }}</span>
+                </div>
+                <div class="space-y-1">
+                    <span class="text-[10px] text-slate-500 font-mono uppercase block">Salary Package</span>
+                    <span class="text-xs font-bold text-indigo-400 font-mono">{{ edit_job.salary_package }}</span>
+                </div>
+                <div class="space-y-1">
+                    <span class="text-[10px] text-slate-500 font-mono uppercase block">Min CGPA Required</span>
+                    <span class="text-xs font-bold text-emerald-400 font-mono">{{ edit_job.min_cgpa_required }}</span>
+                </div>
+                <div class="space-y-1">
+                    <span class="text-[10px] text-slate-500 font-mono uppercase block">Experience Required</span>
+                    <span class="text-xs font-bold text-amber-400 font-mono">{{ edit_job.experience_required }} year{{ edit_job.experience_required|pluralize }}</span>
+                </div>
+                <div class="space-y-1 sm:col-span-2">
+                    <span class="text-[10px] text-slate-500 font-mono uppercase block">Application Deadline</span>
+                    <span class="text-xs font-bold text-slate-200 font-mono">{{ edit_job.application_deadline|date:"F d, Y" }}</span>
+                </div>
+                <div class="space-y-1 sm:col-span-3">
+                    <span class="text-[10px] text-slate-500 font-mono uppercase block">Job Status</span>
+                    <span class="px-2 py-0.5 rounded text-[9.5px] border uppercase inline-block font-semibold
+                        {% if edit_job.is_active %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                        {% else %}bg-slate-950 border-slate-900 text-slate-500{% endif %}">
+                        {{ edit_job.is_active|yesno:"Open (Active),Closed (Inactive)" }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Skills requirements tags list -->
+            <div class="space-y-2 bg-slate-950/20 p-5 rounded-2xl border border-slate-900">
+                <span class="text-xs font-bold text-slate-355 block">Mandatory Technical Skills</span>
+                <div class="flex flex-wrap gap-1.5">
+                    {% for skill in edit_job.skills_required %}
+                        <span class="px-2 py-0.5 rounded text-[9.5px] font-mono bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-semibold">
+                            {{ skill }}
+                        </span>
+                    {% empty %}
+                        <span class="text-slate-500 italic text-[10px]">No skills tags configured</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="space-y-2 bg-slate-950/20 p-5 rounded-2xl border border-slate-900">
+                <span class="text-xs font-bold text-slate-355 block">Detailed Role and Responsibilities Criteria</span>
+                <p class="text-xs text-slate-300 leading-relaxed font-sans whitespace-pre-line">{{ edit_job.description }}</p>
+            </div>
+
+            <!-- Actions button -->
+            <div class="pt-4 border-t border-slate-900/60 flex items-center justify-end gap-3 mt-4">
+                <a href="?status={{ status_filter }}" class="px-5 py-2.5 rounded-xl border border-slate-800 hover:bg-slate-900 text-xs text-slate-400 font-bold cursor-pointer transition-all">
+                    Dismiss Details
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Jobs Table List -->
+    <div class="bg-slate-900/10 border border-slate-900 rounded-3xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="border-b border-slate-900 text-slate-500 font-mono bg-slate-950/40">
+                        <th class="p-4 font-bold">Job Role Title / Company</th>
+                        <th class="p-4 font-bold">Details</th>
+                        <th class="p-4 font-bold">Salary / CTC</th>
+                        <th class="p-4 font-bold">Min CGPA</th>
+                        <th class="p-4 font-bold">Deadline</th>
+                        <th class="p-4 font-bold">Status</th>
+                        <th class="p-4 font-bold text-right whitespace-nowrap">Actions Panel</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-900/60">
+                    {% for job in jobs %}
+                        <tr class="hover:bg-slate-900/15 {% if not job.is_active %}opacity-65{% endif %}">
+                            <td class="p-4">
+                                <div class="space-y-0.5">
+                                    <span class="font-bold text-slate-100 block">{{ job.title }}</span>
+                                    <span class="text-[10px] text-indigo-400 block font-semibold">{{ job.recruiter.company_name }}</span>
+                                </div>
+                            </td>
+                            <td class="p-4 text-slate-350">
+                                <div class="space-y-0.5">
+                                    <span>{{ job.get_job_type_display }}</span>
+                                    <span class="text-[10px] text-slate-500 block">{{ job.location }}</span>
+                                </div>
+                            </td>
+                            <td class="p-4 font-mono font-bold text-slate-200">{{ job.salary_package }}</td>
+                            <td class="p-4 font-mono text-indigo-400 font-bold">{{ job.min_cgpa_required }}</td>
+                            <td class="p-4 font-mono text-slate-400">{{ job.application_deadline|date:"M d, Y" }}</td>
+                            <td class="p-4">
+                                <span class="px-2 py-0.5 rounded text-[9.5px] border uppercase
+                                    {% if job.is_active %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                                    {% else %}bg-slate-950 border-slate-900 text-slate-500{% endif %}">
+                                    {{ job.is_active|yesno:"Open,Closed" }}
+                                </span>
+                            </td>
+                            <td class="p-4 text-right whitespace-nowrap">
+                                <div class="flex items-center justify-end gap-2 flex-nowrap whitespace-nowrap">
+                                    <a href="?status={{ status_filter }}&edit_id={{ job.id }}" class="px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-350 text-[10.5px] font-semibold transition-all">
+                                        View details
+                                    </a>
+                                    <form method="POST" action="" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="job_id" value="{{ job.id }}">
+                                        <button type="submit" class="px-2.5 py-1.5 rounded-lg border border-red-950 bg-red-950/15 hover:bg-red-950/30 text-red-400 text-[10.5px] font-bold cursor-pointer transition-all"
+                                            onclick="return confirm('Are you sure you want to delete the job vacancy: {{ job.title }}?')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="7" class="p-12 text-center text-slate-500 font-mono">No matching job vacancies found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

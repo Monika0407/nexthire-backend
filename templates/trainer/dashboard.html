@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Trainer Dashboard | NextHire{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in">
+    <!-- Header Greeting -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-slate-900/40 p-6 rounded-3xl border border-slate-900">
+        <div class="space-y-1.5">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-indigo-400">Training Institute & Placement Layer</span>
+            <h1 class="text-2xl sm:text-3xl font-black font-display tracking-tight text-white">
+                Trainer Console
+            </h1>
+            <p class="text-sm text-slate-400">Manage trainee placement accreditation, verify eligibility profiles, and recommend candidates to corporate partners.</p>
+        </div>
+        <div class="shrink-0">
+            <a href="{% url 'placement:analytics' %}" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all shadow-lg cursor-pointer whitespace-nowrap">
+                View Trainer Analytics
+            </a>
+        </div>
+    </div>
+
+    <!-- Metrics Bento Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <!-- Total Trainees -->
+        <a href="{% url 'trainer:trainees' %}" class="bg-slate-900/20 hover:bg-slate-900/35 border border-slate-900 hover:border-slate-800/80 rounded-2xl p-5 sm:p-6 transition-all shadow-lg group block">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold text-slate-500 group-hover:text-indigo-400 transition-colors uppercase">Total Trainees</span>
+                <span class="text-xs font-mono font-bold text-indigo-400/80 bg-indigo-500/5 px-2 py-0.5 rounded border border-indigo-500/10">Registries</span>
+            </div>
+            <p class="text-3xl sm:text-4xl font-extrabold font-display text-white mt-4">{{ total_students }}</p>
+            <p class="text-[10px] text-slate-500 mt-1">Total registered trainees</p>
+        </a>
+
+        <!-- Approved Trainees -->
+        <a href="{% url 'trainer:trainees' %}?status=approved" class="bg-slate-900/20 hover:bg-slate-900/35 border border-slate-900 hover:border-slate-800/80 rounded-2xl p-5 sm:p-6 transition-all shadow-lg group block">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold text-slate-500 group-hover:text-emerald-400 transition-colors uppercase">Approved Placements</span>
+                <span class="text-xs font-mono font-bold text-emerald-400/80 bg-emerald-500/5 px-2 py-0.5 rounded border border-emerald-500/10">Accredited</span>
+            </div>
+            <p class="text-3xl sm:text-4xl font-extrabold font-display text-white mt-4">{{ approved_students }}</p>
+            <p class="text-[10px] text-slate-500 mt-1">Eligible to apply for jobs</p>
+        </a>
+
+        <!-- Pending Trainees -->
+        <a href="{% url 'trainer:trainees' %}?status=pending" class="bg-slate-900/20 hover:bg-slate-900/35 border border-slate-900 hover:border-slate-800/80 rounded-2xl p-5 sm:p-6 transition-all shadow-lg group block">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold text-slate-500 group-hover:text-amber-400 transition-colors uppercase">Pending Approvals</span>
+                <span class="text-xs font-mono font-bold text-amber-400/80 bg-amber-500/5 px-2 py-0.5 rounded border border-amber-500/10">Awaiting</span>
+            </div>
+            <p class="text-3xl sm:text-4xl font-extrabold font-display text-white mt-4">{{ pending_students }}</p>
+            <p class="text-[10px] text-slate-500 mt-1">Requires profile audit</p>
+        </a>
+
+        <!-- Total Applications -->
+        <a href="{% url 'trainer:trainees' %}" class="bg-slate-900/20 hover:bg-slate-900/35 border border-slate-900 hover:border-slate-800/80 rounded-2xl p-5 sm:p-6 transition-all shadow-lg group block">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold text-slate-500 group-hover:text-cyan-400 transition-colors uppercase">Total Submissions</span>
+                <span class="text-xs font-mono font-bold text-cyan-400/80 bg-cyan-500/5 px-2 py-0.5 rounded border border-cyan-500/10">Applications</span>
+            </div>
+            <p class="text-3xl sm:text-4xl font-extrabold font-display text-white mt-4">{{ total_applications }}</p>
+            <p class="text-[10px] text-slate-500 mt-1">Filed application registers</p>
+        </a>
+    </div>
+
+    <!-- Handled Courses Management -->
+    <div class="bg-slate-900/20 border border-slate-900 rounded-3xl p-6">
+        <h2 class="text-lg font-black font-display text-white mb-4 flex items-center gap-2">
+            <span class="w-1.5 h-4 bg-indigo-500 rounded"></span> Handled Course Domains
+        </h2>
+        <p class="text-xs text-slate-400 mb-4">Select the course domains you are responsible for. This controls candidate filtering and job match recommendations in your workspace.</p>
+        <form method="post" action="{% url 'trainer:update_courses' %}" class="space-y-4">
+            {% csrf_token %}
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 bg-slate-950 p-4 rounded-xl border border-slate-900">
+                {% for course in courses %}
+                    <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+                        <input 
+                            type="checkbox" 
+                            name="courses" 
+                            value="{{ course.id }}"
+                            class="form-checkbox rounded bg-slate-900 border-slate-800 text-indigo-650 focus:ring-0 focus:ring-offset-0"
+                            {% if course.id in handled_course_ids %}checked{% endif %}
+                        >
+                        <span>{{ course.name }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-900/35 cursor-pointer">
+                    Save Handled Domains
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Quick Navigation Hub -->
+    <div class="bg-slate-900/20 border border-slate-900 rounded-3xl p-6">
+        <h2 class="text-lg font-black font-display text-white mb-4 flex items-center gap-2">
+            <span class="w-1.5 h-4 bg-indigo-500 rounded"></span> Trainer Action Center
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-slate-950/60 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between">
+                <div class="space-y-2">
+                    <h3 class="text-sm font-bold text-white">Student Verification Bench</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Review academic credentials, CGPA records, listed skillsets, and verify trainee profiles for placement accreditation.</p>
+                </div>
+                <a href="{% url 'trainer:trainees' %}" class="mt-4 inline-block text-xs font-bold text-indigo-400 hover:text-indigo-300 hover:underline">Go to Verification Bench</a>
+            </div>
+
+            <div class="bg-slate-950/60 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between">
+                <div class="space-y-2">
+                    <h3 class="text-sm font-bold text-white">Placement Recommendations</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Match top-performing accredited candidates to active job openings and send recommendations directly to recruiters.</p>
+                </div>
+                <a href="{% url 'trainer:trainees' %}?status=approved" class="mt-4 inline-block text-xs font-bold text-emerald-450 hover:text-emerald-350 hover:underline">Recommend Approved Trainees</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

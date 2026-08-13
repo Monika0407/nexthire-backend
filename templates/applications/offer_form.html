@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Draft Compensation Offer Letter | Hire Center{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-8 animate-fade-in">
+    <!-- Back breadcrumb -->
+    <div>
+        <a href="{% url 'interviews:recruiter_dashboard' %}" class="text-xs font-semibold text-slate-500 hover:text-white flex items-center gap-1 transition-colors">Back to Interviews and Selections Dashboard
+        </a>
+    </div>
+
+    <!-- Title banner -->
+    <div class="space-y-1.5">
+        <span class="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2.0 py-1 rounded border border-indigo-500/10 uppercase">Draft Selection Letter</span>
+        <h1 class="text-2xl sm:text-3xl font-black font-display tracking-tight text-white">Generate Career Placement Offer</h1>
+        <p class="text-xs sm:text-sm text-slate-400">
+            Dispatch official onboarding papers, package indexes, and conditional details directly to candidate trainee profiles.
+        </p>
+    </div>
+
+    <!-- Active form -->
+    <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 sm:p-8">
+        <form method="POST" action="" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Errors notifications if any -->
+            {% if form.errors %}
+                <div class="p-4 bg-rose-950/20 border border-rose-900/80 rounded-2xl text-xs text-rose-455 space-y-1">
+                    <p class="font-bold">Please correct form validation mismatches:</p>
+                    <ul class="list-disc pl-5 font-mono">
+                        {% for field, errors in form.errors.items %}
+                            <li><strong>{{ field|capfirst }}:</strong> {{ errors|join:", " }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <!-- Grid inputs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Candidate selection -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-mono font-bold text-slate-450 uppercase">Candidate Trainee Profile:</label>
+                    {{ form.trainee }}
+                    <span class="text-[10px] font-mono text-slate-500">Candidate Batch Code registry details</span>
+                </div>
+
+                <!-- Position selection -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-mono font-bold text-slate-450 uppercase">Target Job Posting:</label>
+                    {{ form.job }}
+                    <span class="text-[10px] font-mono text-slate-500">Position requirements matching eligibility</span>
+                </div>
+            </div>
+
+            <!-- Compensation Package row -->
+            <div class="space-y-2">
+                <label class="block text-xs font-mono font-bold text-slate-450 uppercase">Compensation Package details:</label>
+                {{ form.package }}
+                <span class="text-[10px] font-mono text-slate-500">e.g. 15 LPA (Fixed base: 12 LPA + joining incentive: 2 LPA + retention bonus)</span>
+            </div>
+
+            <!-- Onboarding/Welcome document layout -->
+            <div class="space-y-2">
+                <label class="block text-xs font-mono font-bold text-slate-450 uppercase">Official Offer Document Text context:</label>
+                {{ form.offer_letter_text }}
+                <span class="text-[10px] font-mono text-slate-500">Will be structured and stamped for immediate dynamic download as clean ASCII/TXT file.</span>
+            </div>
+
+            <!-- Control actions -->
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-900/40">
+                <a href="{% url 'interviews:recruiter_dashboard' %}" class="px-5 py-2.5 rounded-xl border border-slate-800 bg-slate-900/10 text-slate-400 hover:text-white text-xs font-bold transition-all select-none">
+                    Cancel draft
+                </a>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs cursor-pointer transition-all">
+                    Release Placement Selection Offer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

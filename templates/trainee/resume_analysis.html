@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire | AI Resume Analysis{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in text-left max-w-4xl mx-auto">
+    <!-- Header title -->
+    <div class="space-y-1.5 border-b border-slate-900 pb-4">
+        <h1 class="text-xl sm:text-2xl font-black font-display text-white flex items-center gap-2">
+            AI Resume Analyzer
+        </h1>
+        <p class="text-xs text-slate-400">Upload your portfolio resume in PDF format. Our Gemini-powered analyzer will evaluate it against industry placement standards.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+        <!-- Upload Form Column (ColSpan: 5) -->
+        <div class="md:col-span-5 space-y-6">
+            <div class="bg-slate-950 border border-slate-900 rounded-3xl p-6 shadow-xl space-y-4">
+                <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-indigo-400 border-b border-slate-900 pb-3">Upload Workspace</h3>
+                
+                <form method="POST" enctype="multipart/form-data" class="space-y-4" onsubmit="document.getElementById('loading-indicator').classList.remove('hidden');">
+                    {% csrf_token %}
+                    
+                    <div class="border-2 border-dashed border-slate-800 hover:border-indigo-500 rounded-2xl p-6 text-center transition-all relative cursor-pointer group">
+                        <input 
+                            type="file" 
+                            name="resume_file" 
+                            accept=".pdf" 
+                            required
+                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            onchange="document.getElementById('file-name-display').innerText = this.files[0] ? this.files[0].name : 'No file selected';"
+                        >
+                        <div class="space-y-2">
+                            <span class="text-3xl block group-hover:scale-110 transition-transform"></span>
+                            <p class="text-xs font-bold text-slate-300">Choose PDF Resume</p>
+                            <p class="text-[10px] text-slate-500">Only PDF documents are supported</p>
+                        </div>
+                    </div>
+                    
+                    <!-- File name indicator -->
+                    <div class="text-[11px] font-mono text-indigo-400 text-center truncate" id="file-name-display">
+                        No file selected
+                    </div>
+
+                    <button type="submit" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white transition-all shadow-lg shadow-indigo-600/10 cursor-pointer text-center select-none">
+                        Analyze CV Details
+                    </button>
+                </form>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loading-indicator" class="hidden p-6 bg-slate-950 border border-indigo-950/40 rounded-3xl text-center space-y-3 animate-pulse">
+                <div class="flex justify-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+                </div>
+                <h4 class="text-xs font-bold text-indigo-400">Gemini Parsing Resume...</h4>
+                <p class="text-[10px] text-slate-500">Extending parameters, reading document text strings, and mapping skills...</p>
+            </div>
+        </div>
+
+        <!-- Diagnostic Reports Column (ColSpan: 7) -->
+        <div class="md:col-span-7 space-y-6">
+            {% if results %}
+                <!-- Score & Summary -->
+                <div class="bg-slate-950 border border-slate-900 rounded-3xl p-6 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-900 pb-3">
+                        <h3 class="text-sm font-black font-display text-white">Diagnostic Scorecard</h3>
+                        <div class="text-2xl font-black text-indigo-400 font-mono">{{ results.resume_score }}/100</div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+                            <div class="bg-indigo-500 h-full rounded-full" style="width: {{ results.resume_score }}%"></div>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed pt-2">
+                            Our AI analysis rated your resume structure and parameters matching value. This score updates your Dynamic Placement Readiness index.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Skills extraction -->
+                <div class="bg-slate-950 border border-slate-900 rounded-3xl p-6 space-y-4">
+                    <h3 class="text-sm font-black font-display text-white border-b border-slate-900 pb-2">Identified Skills</h3>
+                    <div class="flex flex-wrap gap-1.5">
+                        {% for skill in results.extracted_skills %}
+                            <span class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10.5px] px-2 py-0.5 rounded-lg font-mono">
+                                {{ skill }}
+                            </span>
+                        {% empty %}
+                            <span class="text-xs text-slate-500 italic">No skills extracted.</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Missing skills gap -->
+                <div class="bg-slate-950 border border-slate-900 rounded-3xl p-6 space-y-4">
+                    <h3 class="text-sm font-black font-display text-white border-b border-slate-900 pb-2">Missing High-Demand Skills</h3>
+                    <div class="flex flex-wrap gap-1.5">
+                        {% for skill in results.missing_skills %}
+                            <span class="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10.5px] px-2 py-0.5 rounded-lg font-mono">
+                                {{ skill }}
+                            </span>
+                        {% empty %}
+                            <span class="text-xs text-slate-500 italic">No missing skills detected!</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Actionable tips -->
+                <div class="bg-indigo-950/10 border border-indigo-900/20 rounded-3xl p-6 space-y-3">
+                    <h3 class="text-sm font-black font-display text-white">Key Optimization Suggestions</h3>
+                    <ul class="space-y-2.5 text-xs text-slate-400 list-none m-0 p-0">
+                        {% for tip in results.suggestions %}
+                            <li class="flex items-start gap-2">
+                                <span class="text-indigo-400 font-bold shrink-0">✓</span>
+                                <span>{{ tip }}</span>
+                            </li>
+                        {% empty %}
+                            <li class="text-slate-500 italic">Resume looks excellent! No immediate improvements needed.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% else %}
+                <!-- Empty State -->
+                <div class="p-8 border border-dashed border-slate-900 bg-slate-950/40 rounded-3xl text-center flex flex-col items-center justify-center min-h-[300px]">
+                    <span class="text-3xl"></span>
+                    <h4 class="text-xs font-extrabold text-slate-350 mt-4 uppercase tracking-wider">Awaiting Resume Upload</h4>
+                    <p class="text-[10.5px] text-slate-500 mt-1 max-w-[260px] mx-auto">Upload a PDF copy of your CV in the left workspace to begin AI parsing diagnostics.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

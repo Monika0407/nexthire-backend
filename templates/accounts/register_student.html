@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}NextHire | Trainee Registration{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto my-16 bg-slate-900 border border-slate-800 rounded-3xl p-10 shadow-2xl">
+    <div class="text-center mb-8">
+        <h2 class="text-4xl font-bold font-display text-white">Trainee Registration</h2>
+        <p class="text-base text-slate-400 mt-3">Create your scholar candidate profile</p>
+    </div>
+
+    {% if form.errors %}
+    <div class="bg-rose-950/30 border border-rose-900/60 text-rose-450 text-xs p-4 rounded-xl mb-6 text-left">
+        <ul class="list-disc pl-4 space-y-1">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <form method="post" class="space-y-6 text-left">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-2 gap-x-8 gap-y-6">
+            <!-- Name Field -->
+            <div class="space-y-2">
+                <label for="id_name" class="text-sm font-bold text-slate-355 uppercase tracking-wider">Name <span class="text-rose-500">*</span></label>
+                <input type="text" name="name" id="id_name" required 
+                       class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-base text-slate-100 placeholder-slate-650 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                       placeholder="Enter Full Name" value="{{ form.name.value|default_if_none:'' }}">
+            </div>
+
+            <!-- Email Field -->
+            <div class="space-y-2">
+                <label for="id_email" class="text-sm font-bold text-slate-355 uppercase tracking-wider">Email Address <span class="text-rose-500">*</span></label>
+                <input type="email" name="email" id="id_email" required 
+                       class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-base text-slate-100 placeholder-slate-650 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                       placeholder="trainee@college.edu" value="{{ form.email.value|default_if_none:'' }}">
+            </div>
+
+            <!-- Mobile Number -->
+            <div class="space-y-2">
+                <label for="id_phone_number" class="text-sm font-bold text-slate-355 uppercase tracking-wider">Mobile number</label>
+                <input type="text" name="phone_number" id="id_phone_number" 
+                       class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-base text-slate-100 placeholder-slate-650 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                       placeholder="Enter Mobile Number" value="{{ form.phone_number.value|default_if_none:'' }}">
+            </div>
+
+            <!-- Batch Code -->
+            <div class="space-y-2">
+                <label for="id_batch_code" class="text-sm font-bold text-slate-355 uppercase tracking-wider">Batch Code <span class="text-rose-500">*</span></label>
+                <input type="text" name="batch_code" id="id_batch_code" required
+                       class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-base text-slate-100 placeholder-slate-650 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                       placeholder="Enter Batch Code" value="{{ form.batch_code.value|default_if_none:'' }}">
+            </div>
+
+            <!-- Degree -->
+            <div class="space-y-2">
+                <label for="id_degree" class="text-sm font-bold text-slate-355 uppercase tracking-wider">Degree <span class="text-rose-500">*</span></label>
+                <input type="text" name="degree" id="id_degree" required
+                       class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-base text-slate-100 placeholder-slate-650 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                       placeholder="Enter Degree" value="{{ form.degree.value|default_if_none:'' }}">
+            </div>
+
+            <!-- Branch -->
+            <div class="space-y-2">
+                <label for="id_branch" class="text-sm font-bold text-slate-355 uppercase tracking-wider">Branch <span class="text-rose-500">*</span></label>
+                <input type="text" name="branch" id="id_branch" required
+                       class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-base text-slate-100 placeholder-slate-650 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                       placeholder="Enter Branch" value="{{ form.branch.value|default_if_none:'' }}">
+            </div>
+
+            <!-- Enrolled Courses -->
+            <div class="space-y-2 col-span-2">
+                <label class="text-sm font-bold text-slate-355 uppercase tracking-wider block mb-2">Enrolled Courses <span class="text-rose-500">*</span></label>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                    {% for checkbox in form.courses %}
+                        <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+                            <input type="checkbox" name="courses" value="{{ checkbox.data.value }}" id="{{ checkbox.id_for_label }}"
+                                   class="form-checkbox rounded bg-slate-900 border-slate-800 text-indigo-650 focus:ring-0 focus:ring-offset-0"
+                                   {% if checkbox.data.selected %}checked{% endif %}>
+                            <span>{{ checkbox.choice_label }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="space-y-2">
+                <label for="id_password" class="text-sm font-bold text-slate-355 uppercase tracking-wider">Password <span class="text-rose-500">*</span></label>
+                <div class="relative">
+                    <input type="password" name="password" id="id_password" required 
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 pr-12 text-base text-slate-100 placeholder-slate-650 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                           placeholder="••••••••">
+                    <button type="button" onclick="togglePasswordVisibility('id_password', this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors select-none focus:outline-none">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Confirm Password Field -->
+            <div class="space-y-2">
+                <label for="id_confirm_password" class="text-sm font-bold text-slate-355 uppercase tracking-wider">Confirm Password <span class="text-rose-500">*</span></label>
+                <div class="relative">
+                    <input type="password" name="confirm_password" id="id_confirm_password" required 
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 pr-12 text-base text-slate-100 placeholder-slate-650 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                           placeholder="••••••••">
+                    <button type="button" onclick="togglePasswordVisibility('id_confirm_password', this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors select-none focus:outline-none">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" 
+                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl p-4 text-base transition-all hover:shadow-lg hover:shadow-indigo-900/20 active:scale-98 cursor-pointer mt-6">
+            Register Account
+        </button>
+    </form>
+
+    <div class="border-t border-slate-800 mt-8 pt-6 text-center">
+        <p class="text-sm text-slate-500">
+            Already have an account? 
+            <a href="{% url 'accounts:login_student' %}" class="font-semibold text-indigo-400 hover:text-indigo-300 hover:underline">
+                Sign In
+            </a>
+        </p>
+    </div>
+</div>
+
+<script>
+    function togglePasswordVisibility(fieldId, btn) {
+        var field = document.getElementById(fieldId);
+        if (field.type === "password") {
+            field.type = "text";
+            btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.076m3.102-3.102A9.97 9.97 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-1.563 3.076M9 9l6 6m-5.5-1.5a3 3 0 110-6 3 3 0 010 6z"></path></svg>`;
+        } else {
+            field.type = "password";
+            btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>`;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var form = document.querySelector("form");
+        if (form) {
+            form.addEventListener("submit", function(e) {
+                var checkboxes = document.querySelectorAll('input[type="checkbox"][name="courses"]');
+                var checked = Array.prototype.slice.call(checkboxes).some(x => x.checked);
+                if (!checked) {
+                    alert("Please select at least one Enrolled Course before registering.");
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

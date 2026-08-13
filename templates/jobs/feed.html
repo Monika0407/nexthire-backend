@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire | Opportunities Feed{% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in text-left">
+
+    <!-- Header title and search banner -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-900 pb-5">
+        <div class="space-y-1">
+            <h1 class="text-xl sm:text-2xl font-black font-display text-white">
+                Placements Opportunities Feed
+            </h1>
+            <p class="text-xs text-slate-400">Discover active vacancies, evaluate eligibility requirements, and submit applications directly to hiring recruiters.</p>
+        </div>
+
+        <!-- Filters Form -->
+        <form method="GET" class="flex flex-wrap items-center gap-3">
+            <div class="relative">
+                <input 
+                    type="text" 
+                    name="q" 
+                    value="{{ search_q }}" 
+                    placeholder="Search by Title or Keyword..." 
+                    class="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 w-48 sm:w-56"
+                >
+            </div>
+            <div class="relative">
+                <input 
+                    type="text" 
+                    name="location" 
+                    value="{{ loc_filter }}" 
+                    placeholder="Filter by Location..." 
+                    class="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 w-36"
+                >
+            </div>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-600/15 cursor-pointer">
+                Apply Filters
+            </button>
+            {% if search_q or loc_filter %}
+                <a href="{% url 'jobs:feed' %}" class="text-xs text-slate-500 hover:text-white underline">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Active Feed listings -->
+    <div class="space-y-4">
+        {% if jobs %}
+            {% for job in jobs %}
+                <div class="bg-slate-900/10 border border-slate-900 hover:border-slate-800 rounded-3xl p-6 transition-all hover:bg-slate-950/40">
+                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                        
+                        <!-- Left: Job info -->
+                        <div class="space-y-3 flex-grow min-w-0">
+                            <div class="flex items-center gap-3 flex-wrap">
+                                <span class="text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                                    {{ job.get_job_type_display }}
+                                </span>
+                                <span class="text-[10px] text-slate-550 font-mono">Posted {{ job.posted_at|date:"M d, Y" }}</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-white font-sans truncate">{{ job.title }}</h3>
+                            <p class="text-[11.5px] font-semibold text-indigo-400">{{ job.recruiter.company_name }}</p>
+                            <p class="text-xs text-slate-400 leading-relaxed font-sans pr-4">
+                                {% if job.description|length > 150 %}
+                                    {{ job.description|slice:":150" }}...
+                                    <button type="button"
+                                            class="text-indigo-400 hover:text-indigo-300 font-bold hover:underline cursor-pointer ml-1 select-none whitespace-nowrap"
+                                            data-job-title="{{ job.title|escape }}"
+                                            data-job-type="{{ job.get_job_type_display|escape }}"
+                                            data-location="{{ job.location|escape }}"
+                                            data-salary="{{ job.salary_package|escape }}"
+                                            data-deadline="{{ job.application_deadline|date:'M d, Y'|escape }}"
+                                            data-description="{{ job.description|escape }}"
+                                            data-skills="{% for skill in job.skills_required %}{{ skill }}{% if not forloop.last %}, {% endif %}{% endfor %}"
+                                            data-courses="{% for course in job.required_courses.all %}{{ course.name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
+                                            data-company-name="{{ job.recruiter.company_name|escape }}"
+                                            data-company-domain="{{ job.recruiter.industry_domain|escape }}"
+                                            data-company-website="{{ job.recruiter.company_website|default:''|escape }}"
+                                            data-company-about="{{ job.recruiter.about_company|default:'No description shared.'|escape }}"
+                                            onclick="openJobDetailModal(this)">
+                                        Learn More
+                                    </button>
+                                {% else %}
+                                    {{ job.description }}
+                                {% endif %}
+                            </p>
+                            
+                            <!-- Parameters tags -->
+                            <div class="flex flex-wrap items-center gap-4 pt-2 text-[10.5px] text-slate-400 font-mono">
+                                <div class="flex items-center gap-1">
+                                    <span class="text-slate-500">CTC:</span>
+                                    <strong class="text-emerald-400 font-bold">{{ job.salary_package }}</strong>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-slate-500">Location:</span>
+                                    <strong class="text-slate-200">{{ job.location }}</strong>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-slate-500">Deadline:</span>
+                                    <strong class="text-slate-200 text-rose-400">{{ job.application_deadline|date:"M d, Y" }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Eligibility and Apply action -->
+                        <div class="flex flex-col items-start md:items-end justify-between md:text-right gap-4 shrink-0 self-stretch min-w-[200px]">
+                            
+                            <!-- Eligibility block -->
+                            <div class="space-y-1 text-[11px] font-sans">
+                                <span class="text-[9.5px] font-mono font-bold text-slate-500 uppercase block">Eligibility Criteria</span>
+                                <p class="text-slate-300">Minimum CGPA Required: <strong class="text-white font-bold">{{ job.min_cgpa_required }}</strong></p>
+                                <p class="text-slate-300">Experience Required: <strong class="text-white font-bold">{{ job.experience_required }} year{{ job.experience_required|pluralize }}</strong></p>
+                                {% if trainee %}
+                                    <p class="text-slate-400">Your CGPA: <strong class="{% if trainee.cgpa >= job.min_cgpa_required %}text-emerald-400{% else %}text-red-400{% endif %} font-bold">{{ trainee.cgpa }}</strong></p>
+                                    <p class="text-slate-400">Your Experience: <strong class="{% if trainee.experience_years >= job.experience_required %}text-emerald-400{% else %}text-red-400{% endif %} font-bold">{{ trainee.experience_years }} year{{ trainee.experience_years|pluralize }}</strong></p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="mt-auto w-full md:w-auto">
+                                {% if trainee %}
+                                    {% if job.id in applied_job_ids %}
+                                        <button class="w-full md:w-auto px-5 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold font-display cursor-default flex items-center justify-center gap-1.5 select-none" disabled>
+                                            ✓ Applied & Ready
+                                        </button>
+                                    {% elif trainee.cgpa < job.min_cgpa_required %}
+                                        <button class="w-full md:w-auto px-5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 text-xs font-bold font-display cursor-not-allowed select-none" title="Your CGPA does not meet the minimum requirement" disabled>
+                                            CGPA Ineligible
+                                        </button>
+                                    {% elif job.id not in course_eligible_job_ids %}
+                                        <button class="w-full md:w-auto px-5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 text-xs font-bold font-display cursor-not-allowed select-none" title="Your enrolled courses do not match the required courses for this job" disabled>
+                                            Course Ineligible
+                                        </button>
+                                    {% elif job.id not in experience_eligible_job_ids %}
+                                        <button class="w-full md:w-auto px-5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 text-xs font-bold font-display cursor-not-allowed select-none" title="Your experience does not meet the minimum requirement" disabled>
+                                            Experience Ineligible
+                                        </button>
+                                    {% else %}
+                                        <a href="{% url 'applications:apply' job.id %}" class="w-full md:w-auto px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold font-display cursor-pointer transition-all shadow-lg hover:shadow-indigo-600/15 inline-flex items-center justify-center text-center">
+                                            Apply Now
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-[10px] text-slate-500 font-mono block">Recruiter or Admin Account</span>
+                                {% endif %}
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Skills Requirements -->
+                    {% if job.skills_required %}
+                        <div class="mt-4 pt-3 border-t border-slate-900/60 flex flex-wrap items-center gap-1.5">
+                            <span class="text-[9.5px] font-mono text-slate-500 uppercase font-bold mr-1.5">Required Skills:</span>
+                            {% for skill in job.skills_required %}
+                                <span class="text-[9.5px] font-mono bg-slate-950 border border-slate-900 px-2 py-0.5 rounded text-slate-400">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Course Requirements -->
+                    {% if job.required_courses.exists %}
+                        <div class="mt-2 pt-2 border-t border-slate-900/60 flex flex-wrap items-center gap-1.5">
+                            <span class="text-[9.5px] font-mono text-slate-500 uppercase font-bold mr-1.5">Required Courses:</span>
+                            {% for course in job.required_courses.all %}
+                                <span class="text-[9.5px] font-mono bg-indigo-950/20 border border-indigo-900/40 px-2 py-0.5 rounded text-indigo-400">{{ course.name }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="bg-slate-900/5 border border-slate-900/60 py-16 px-6 rounded-3xl text-center space-y-4">
+                <span class="text-4xl block"></span>
+                <div class="space-y-1">
+                    <p class="text-sm text-slate-450 font-bold">No active job listings found.</p>
+                    <p class="text-xs text-slate-600">Check back later or search with different tags.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

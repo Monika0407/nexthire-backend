@@ -1,0 +1,107 @@
+<!-- templates/recruiters/schedule_form.html -->
+{% extends "base.html" %}
+
+{% block title %}NextHire | Schedule Interview Round{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6 animate-fade-in">
+    <!-- Header title -->
+    <div class="space-y-1.5 border-b border-slate-900 pb-4 text-left">
+        <h1 class="text-xl sm:text-2xl font-black font-display text-white flex items-center gap-2">
+            Coordinate Evaluation Interview Round
+        </h1>
+        <p class="text-xs text-slate-400">Schedule technical test or HR video chats slots. This instantly pushes the trainee application to "Interviews Scheduled" and emails candidates invitations.</p>
+    </div>
+
+    <!-- Schedulers Card Forms -->
+    <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 sm:p-8">
+        
+        <!-- Candidate Overview details -->
+        <div class="flex items-center gap-3 p-4 bg-slate-950/40 rounded-2xl border border-slate-900 mb-6 text-left text-xs">
+            <div class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center font-bold text-indigo-400 uppercase">
+                {{ trainee.user.username|slice:":2" }}
+            </div>
+            <div>
+                <p class="text-slate-400 font-medium">Candidate: <strong class="text-white">{{ trainee.user.get_full_name|default:trainee.user.username }}</strong></p>
+                <p class="text-[10px] text-slate-500 font-mono">Job vacancy target: {{ application.job.title }} (Auto Screen Rank: {{ application.screener_score }}%)</p>
+            </div>
+        </div>
+
+        <form method="POST" class="space-y-5 text-left">
+            {% csrf_token %}
+
+            <!-- Title Round -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-350">Evaluation Round Name Tag</label>
+                <input 
+                    type="text" 
+                    name="round_title" 
+                    value="Technical Interview - Round 1"
+                    class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500" 
+                    required
+                >
+                <p class="text-[9.5px] text-slate-500">e.g. Technical Round 1, System Design Round, HR Culture fit.</p>
+            </div>
+
+            <!-- Stage selection -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-350">Scientific Interview Stage</label>
+                <select 
+                    name="stage" 
+                    class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                >
+                    <option value="TECHNICAL">Technical Evaluation Round</option>
+                    <option value="MANAGERIAL">Managerial Assessment</option>
+                    <option value="HR">Human Resources Culture Fit</option>
+                </select>
+            </div>
+
+            <!-- Double cols: Schedule & Platform -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-350">Scheduling Date & Time coordinates</label>
+                    <input 
+                        type="datetime-local" 
+                        name="scheduled_at" 
+                        class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 focus:outline-none" 
+                        required
+                    >
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-350">Platform Channel</label>
+                    <input 
+                        type="text" 
+                        name="platform" 
+                        value="Google Meet"
+                        class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 focus:outline-none" 
+                        required
+                    >
+                </div>
+            </div>
+
+            <!-- Meet Link input -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-slate-350">Video Call URL Link</label>
+                <input 
+                    type="url" 
+                    name="meet_url" 
+                    value="https://meet.google.com/nh-recruit"
+                    class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 focus:outline-none" 
+                    placeholder="https://meet.google.com/abc-defg-hij"
+                    required
+                >
+            </div>
+
+            <!-- Back buttons footer -->
+            <div class="pt-4 border-t border-slate-900/60 flex items-center justify-end gap-3 mt-4">
+                <a href="{% url 'recruiters:applicants' %}" class="px-5 py-3 rounded-xl border border-slate-800 hover:bg-slate-900 text-xs text-slate-400 font-semibold cursor-pointer transition-all">
+                    Discard Scheduling
+                </a>
+                <button type="submit" class="px-6 py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold font-display cursor-pointer transition-all shadow-lg shadow-amber-600/15">
+                    Dispatch Slot Invitation
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

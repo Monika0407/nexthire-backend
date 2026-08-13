@@ -1,0 +1,216 @@
+<!-- templates/ai/dashboard.html -->
+{% extends 'base.html' %}
+{% block title %}NextHire | AI Intelligence & Diagnostics Hub{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in max-w-6xl mx-auto">
+    <!-- Header banner -->
+    <div class="border-b border-slate-900 pb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <span class="text-[10px] font-mono font-black uppercase tracking-wider text-indigo-400">NextHire Core AI Suite</span>
+            <h1 class="text-2xl font-black mt-2 tracking-tight">AI Placement Intelligence & Diagnostics</h1>
+            <p class="text-xs text-slate-400 mt-1">Harness advanced deep semantic matching models to assess your placement readiness, conduct mock interviews, and build skill alignment paths.</p>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <a href="{% url 'ai:career_guidance' %}" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 font-bold text-xs text-white transition-all shadow-lg shadow-indigo-600/10 cursor-pointer">
+                Advisor Coach Chat
+            </a>
+        </div>
+    </div>
+
+    <!-- Phase 6 Readiness Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Card 1: Resume Readiness -->
+        <div class="p-6 border border-slate-900 bg-slate-950 rounded-2xl flex flex-col justify-between min-h-[170px] hover:border-slate-800 transition-all">
+            <div class="space-y-1">
+                <span class="text-[10px] font-mono uppercase text-slate-500 font-bold flex items-center gap-1">RESUME STACK READYNESS</span>
+                <h3 class="text-xs text-slate-400 leading-normal">Evaluates keyword density coefficients, typos, and technical skill breadth.</h3>
+            </div>
+            <div class="flex items-end justify-between pt-4">
+                <span class="text-4xl font-black font-mono {% if resume_readiness >= 75 %}text-emerald-400{% elif resume_readiness >= 50 %}text-amber-400{% else %}text-rose-455{% endif %}">
+                    {{ resume_readiness }}%
+                </span>
+                <a href="{% url 'ai:resume_analyze' %}" class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 text-[10px] font-bold text-slate-300 transition-colors">
+                    Run AI Scan
+                </a>
+            </div>
+        </div>
+
+        <!-- Card 2: Interview Flight Readiness -->
+        <div class="p-6 border border-slate-900 bg-slate-950 rounded-2xl flex flex-col justify-between min-h-[170px] hover:border-slate-800 transition-all">
+            <div class="space-y-1">
+                <span class="text-[10px] font-mono uppercase text-slate-500 font-bold flex items-center gap-1">MOCK PRESENTATION READYNESS</span>
+                <h3 class="text-xs text-slate-400 leading-normal">Measures communication fluency, technical concept retention, and articulation scores.</h3>
+            </div>
+            <div class="flex items-end justify-between pt-4">
+                <span class="text-4xl font-black font-mono {% if interview_readiness >= 75 %}text-emerald-400{% elif interview_readiness >= 50 %}text-amber-400{% else %}text-rose-455{% endif %}">
+                    {{ interview_readiness }}%
+                </span>
+                <a href="{% url 'ai:interview_list' %}" class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 text-[10px] font-bold text-slate-300 transition-colors">
+                    Open Practice Flight
+                </a>
+            </div>
+        </div>
+
+        <!-- Card 3: Combined Career Readiness Indicator -->
+        <div class="p-6 border-2 border-indigo-900/60 bg-slate-950 rounded-2xl flex flex-col justify-between min-h-[170px] relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-1 bg-indigo-505/20 text-indigo-405 text-[8px] uppercase tracking-widest font-mono border-b border-l border-indigo-900/50">PLATFORM_INDEX</div>
+            <div class="space-y-1">
+                <span class="text-[10px] font-mono uppercase text-indigo-450 font-bold flex items-center gap-1">OVERALL RECRUITMENT COMPLIANCE</span>
+                <h3 class="text-xs text-slate-450 leading-normal">Weighted index across academic scores, resume density, and technical interview benchmarks.</h3>
+            </div>
+            <div class="flex items-end justify-between pt-4">
+                <span class="text-4xl font-black font-mono text-indigo-400">
+                    {{ career_readiness }}%
+                </span>
+                <a href="{% url 'ai:resume_roadmap' %}" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-[10px] font-bold text-white transition-colors">
+                    View Upgrade Roadmap
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main diagnostics split layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Left: Actionable Advice + Resume Details -->
+        <div class="lg:col-span-7 space-y-6">
+            <!-- Latest Resume Evaluation Detail Card -->
+            <div class="p-6 border border-slate-900 bg-slate-950 rounded-2xl space-y-4">
+                <h3 class="text-sm font-extrabold flex items-center gap-2 border-b border-slate-900 pb-2.5">
+                    <span></span> Present Resume Analytics Breakdown
+                </h3>
+
+                {% if latest_analysis %}
+                <div class="space-y-4 text-xs font-semibold">
+                    <div>
+                        <span class="text-[10px] font-mono text-slate-500 uppercase">AI Extracted Overview Summary:</span>
+                        <p class="text-slate-350 leading-relaxed font-normal mt-1">{{ latest_analysis.resume_summary }}</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Missing Skills -->
+                        <div class="space-y-1.5">
+                            <span class="text-[10px] font-mono text-indigo-400 uppercase">Priority Gaps Identified:</span>
+                            <div class="flex flex-wrap gap-1">
+                                {% for skill in latest_analysis.missing_skills %}
+                                <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] text-slate-450 font-mono">{{ skill }}</span>
+                                {% empty %}
+                                <span class="text-slate-550 italic">None logged. Profile aligns nicely!</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Improvement Tips -->
+                        <div class="space-y-1.5">
+                            <span class="text-[10px] font-mono text-emerald-450 uppercase">Immediate Polish Steps:</span>
+                            <ul class="space-y-1 list-disc list-inside text-slate-350 font-normal">
+                                {% for tip in latest_analysis.improvement_tips|slice:":3" %}
+                                <li>{{ tip }}</li>
+                                {% empty %}
+                                <li class="text-slate-550 italic">Resume metrics optimized.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-10 space-y-3">
+                    <span class="text-3xl"></span>
+                    <p class="text-xs text-slate-500 italic">No resume analyses located inside diagnostic registers.</p>
+                    <a href="{% url 'ai:resume_analyze' %}" class="inline-block px-3.5 py-2 rounded-xl bg-indigo-650 hover:bg-indigo-750 font-bold text-xs text-white transition-all shadow-lg cursor-pointer">
+                        Initiate First AI Resume Scan
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Roadmap status tracking card -->
+            <div class="p-6 border border-slate-900 bg-slate-950 rounded-2xl flex flex-col justify-between gap-4">
+                <div class="flex items-center justify-between border-b border-slate-900 pb-2.5">
+                    <h3 class="text-sm font-extrabold flex items-center gap-2">
+                        <span></span> Upgrades Study Blueprint Track
+                    </h3>
+                    <span class="text-[10px] font-mono text-indigo-400 font-bold">Active Progress Monitor</span>
+                </div>
+
+                {% if latest_roadmap %}
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between text-xs font-semibold">
+                        <span class="text-slate-400">Roadmap Milestone Progress:</span>
+                        <span class="text-indigo-400 text-sm font-black">{{ latest_roadmap.progress_percentage }}%</span>
+                    </div>
+                    <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800/80">
+                        <div class="bg-indigo-500 h-full transition-all" style="width: {{ latest_roadmap.progress_percentage }}%"></div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-500 font-mono text-[10.5px]">{{ latest_roadmap.weak_areas|length }} Tech Gaps pending</span>
+                        <a href="{% url 'ai:resume_roadmap' %}" class="text-indigo-455 font-bold hover:underline">Manage action modules</a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-6 text-xs font-semibold space-y-2">
+                    <p class="text-slate-500 italic">No active CV upgrades roadmap exists for your account.</p>
+                    <a href="{% url 'ai:resume_roadmap' %}" class="text-indigo-455 font-black hover:underline uppercase block">Initialize Roadmap Generation</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right: Phase 8 History Ledger & Logs -->
+        <ol class="lg:col-span-5 bg-slate-950 border border-slate-900 p-6 rounded-2xl space-y-5 list-none m-0">
+            <li class="border-b border-slate-900 pb-3 flex items-center justify-between">
+                <h3 class="text-sm font-extrabold flex items-center gap-2 text-white">
+                    <span>️</span> AI Engagement History Logs
+                </h3>
+                <span class="text-[9.5px] font-mono text-slate-500">Phase 8 Ledger</span>
+            </li>
+
+            <!-- Sublist: Mock Interview Log history -->
+            <li class="space-y-3">
+                <span class="text-[10px] font-mono uppercase text-indigo-400 font-bold">Past Mock Interviews</span>
+                <div class="space-y-2.5">
+                    {% for session in interviews_history %}
+                    <div class="p-3 rounded-xl border border-slate-900 bg-slate-900/30 flex items-center justify-between text-xs font-semibold gap-3">
+                        <div class="text-left space-y-1">
+                            <span class="text-white block font-bold truncate max-w-xs">{{ session.role_title }}</span>
+                            <span class="text-[9.5px] font-mono text-slate-550 block">{{ session.created_at|date:"Y-m-d H:i" }}</span>
+                        </div>
+                        
+                        <div class="text-right shrink-0">
+                            {% if session.is_completed %}
+                            <span class="text-indigo-405 font-mono text-xs font-black">Score: {{ session.technical_score }}%</span>
+                            <div class="text-[8.5px] text-slate-500 uppercase font-mono">Completed</div>
+                            {% else %}
+                            <a href="{% url 'ai:interview_session' session.id %}" class="px-2 py-1 rounded bg-slate-900 border border-slate-800 text-amber-500 text-[9px] font-bold">Resume</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-slate-550 italic text-[10.5px] text-center py-2">No past technical mock interviews recorded.</div>
+                    {% endfor %}
+                </div>
+            </li>
+
+            <!-- Sublist: Resume Scans Log history -->
+            <li class="space-y-3 pt-2">
+                <span class="text-[10px] font-mono uppercase text-emerald-450 font-bold">Historical Resume Scans</span>
+                <div class="space-y-2.5">
+                    {% for item in analyses_history %}
+                    <div class="p-3 rounded-xl border border-slate-900 bg-slate-900/30 flex items-center justify-between text-xs font-semibold gap-3">
+                        <div class="text-left space-y-1">
+                            <span class="text-white block font-bold truncate max-w-[200px]">ATS Score Assessment</span>
+                            <span class="text-[9.5px] font-mono text-slate-550 block">{{ item.created_at|date:"Y-m-d H:i" }}</span>
+                        </div>
+                        <span class="text-emerald-400 font-mono text-xs font-black">{{ item.resume_score }}%</span>
+                    </div>
+                    {% empty %}
+                    <div class="text-slate-550 italic text-[10.5px] text-center py-2">No historical scans registered.</div>
+                    {% endfor %}
+                </div>
+            </li>
+        </ol>
+    </div>
+</div>
+{% endblock %}

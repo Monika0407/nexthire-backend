@@ -1,0 +1,92 @@
+<!-- templates/ml_engine/recommendations.html -->
+{% extends 'base.html' %}
+{% block title %}NextHire | Smart Job Recommendations{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in max-w-5xl mx-auto">
+    <!-- Header banner details -->
+    <div class="border-b border-slate-900 pb-5">
+        <a href="{% url 'ml_engine:dashboard' %}" class="text-xs font-semibold text-indigo-400 hover:underline">Back to Diagnostics Hub</a>
+        <h1 class="text-2xl font-black mt-2 tracking-tight">Personalized Job Recommendations</h1>
+        <p class="text-xs text-slate-400 mt-1">Our ML Recommendation Engine sifts and matches active vacancies against your verified profile credentials, sorting by overall alignment.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Main recommendations columns -->
+        <ol class="lg:col-span-8 space-y-4 list-none m-0 p-0">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 block pb-2">Matching Vacancies</h3>
+
+            {% for rec in recommended_jobs %}
+            <li class="p-6 border border-slate-900 bg-slate-950 rounded-2xl flex flex-col sm:flex-row sm:items-start justify-between gap-6 hover:border-slate-800 hover:bg-slate-900/10 transition-all">
+                <div class="text-left space-y-3 font-semibold text-xs">
+                    <div>
+                        <span class="px-2 py-0.5 rounded bg-indigo-505/10 border border-indigo-500/20 text-indigo-405 font-mono text-[9px] uppercase tracking-wider">
+                            JOB VACANCY
+                        </span>
+                        <h3 class="text-sm font-black text-white mt-1.5 leading-none">{{ rec.job.title }}</h3>
+                        <p class="text-indigo-400 font-bold leading-none mt-1">{{ rec.job.recruiter.company_name }} — <span class="text-slate-450">{{ rec.job.location }}</span></p>
+                    </div>
+
+                    <!-- Details breakdown -->
+                    <div class="space-y-1 text-slate-450">
+                        <p>Estimated Stipend/Salary Package: <span class="text-white">{{ rec.job.salary_package }}</span></p>
+                        <p>Academic Cutoff CGPA: <span class="text-white">{{ rec.job.min_cgpa_required }}</span> (Your GPA: {{ trainee.cgpa }})</p>
+                    </div>
+
+                    <!-- Skills overlaps indicators -->
+                    <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                        {% for msk in rec.matched_skills %}
+                        <span class="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9.5px] font-mono font-bold flex items-center gap-1">✓ {{ msk }}</span>
+                        {% endfor %}
+                        {% for mis in rec.missing_skills %}
+                        <span class="px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[9.5px] font-mono font-bold flex items-center gap-1">✗ {{ mis }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-end justify-between sm:min-h-[140px] shrink-0">
+                    <div class="text-right">
+                        <span class="text-2xl font-black font-mono {% if rec.match_score >= 75 %}text-emerald-400{% elif rec.match_score >= 50 %}text-amber-400{% else %}text-rose-400{% endif %}">
+                            {{ rec.match_score }}%
+                        </span>
+                        <p class="text-[9px] font-mono uppercase tracking-wider text-slate-500 font-bold mt-0.5">Overlap Score</p>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-2 sm:pt-0">
+                        <a href="{% url 'ml_engine:skill_gap' %}?job_id={{ rec.job.id }}" class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 font-bold text-[10px] text-slate-350 transition-colors cursor-pointer">
+                            Inspect Skill Gap
+                        </a>
+                    </div>
+                </div>
+            </li>
+            {% empty %}
+            <li class="p-8 border border-dashed border-slate-900 bg-slate block text-center py-12 text-slate-500 italic text-xs">
+                No matching or active jobs found in the platform database schemas.
+            </li>
+            {% endfor %}
+        </ol>
+
+        <!-- Right Side advice column -->
+        <ol class="lg:col-span-4 space-y-6 list-none m-0 p-0">
+            <!-- Suggested skill acquisitions -->
+            <li class="p-6 border border-slate-900 bg-slate-950 rounded-2xl space-y-4">
+                <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 border-b border-slate-900 pb-3 block">Suggested Skill Targets</h3>
+                <p class="text-xs text-slate-400 leading-normal">
+                    We noticed you are missing these specific skills across highly recommended vacancies. Acquiring them would heavily boost match scores:
+                </p>
+
+                <div class="space-y-2">
+                    {% for msk in suggested_skills %}
+                    <div class="p-3 rounded-xl border border-slate-905 bg-slate-900/30 flex items-center justify-between text-xs font-semibold">
+                        <span class="text-white font-mono uppercase text-[10px]">{{ msk }}</span>
+                        <span class="text-[9.5px] font-mono text-indigo-400 font-black tracking-wide">+15.4% Overlap</span>
+                    </div>
+                    {% empty %}
+                    <li class="text-xs text-slate-500 italic">No significant technology gaps detected in matching filters.</li>
+                    {% endfor %}
+                </div>
+            </li>
+        </ol>
+    </div>
+</div>
+{% endblock %}

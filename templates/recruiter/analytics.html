@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}NextHire Recruiter Analytics | Hiring Preparedness Desk{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in text-left">
+    <!-- Header title -->
+    <div class="space-y-1.5 border-b border-slate-900 pb-4">
+        <h1 class="text-xl sm:text-2xl font-black font-display text-white flex items-center gap-2">
+            Hiring Analytics & Pipeline Statistics
+        </h1>
+        <p class="text-xs text-slate-400">Monitor candidate flows, track corporate conversions, and review top academic profiles matching your jobs.</p>
+    </div>
+
+    <!-- Bento Grid Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <!-- Total Applicants Card -->
+        <div class="bg-indigo-950/10 border border-indigo-900/40 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-400">Total Applicants</span>
+                <span class="text-lg">👥</span>
+            </div>
+            <div class="space-y-1">
+                <div class="text-3xl font-black font-display text-white">{{ total_applicants }}</div>
+                <p class="text-[10px] text-slate-500 leading-normal">Total candidates applied across all jobs</p>
+            </div>
+            <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-indigo-500 h-full" style="width: {% if total_applicants %}{% widthratio total_applicants 10 100 %}{% else %}0{% endif %}%"></div>
+            </div>
+        </div>
+
+        <!-- Placements Card -->
+        <div class="bg-emerald-950/10 border border-emerald-900/40 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400">Corporate Placements</span>
+                <span class="text-lg">💼</span>
+            </div>
+            <div class="space-y-1">
+                <div class="text-3xl font-black font-display text-white">{{ placements }}</div>
+                <p class="text-[10px] text-slate-500 leading-normal">Candidates officially placed / offers accepted</p>
+            </div>
+            <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-emerald-500 h-full" style="width: {% if placements %}{% widthratio placements 10 100 %}{% else %}0{% endif %}%"></div>
+            </div>
+        </div>
+
+        <!-- Conversion Rate Card -->
+        <div class="bg-amber-950/10 border border-amber-900/40 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-500">Hiring Conversion Rate</span>
+                <span class="text-lg">📈</span>
+            </div>
+            <div class="space-y-1">
+                <div class="text-3xl font-black font-display text-white">{{ conversion_rate }}%</div>
+                <p class="text-[10px] text-slate-500 leading-normal">Conversion efficiency percentage</p>
+            </div>
+            <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-amber-500 h-full" style="width: {{ conversion_rate }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Charts Rows -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Left: Submission Status Balances per Job -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 space-y-6">
+            <div class="flex flex-col gap-3 border-b border-slate-900/60 pb-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-black font-display text-white">Submission Status Balances</h3>
+                        <p class="text-[10px] text-slate-500">Pipeline distribution per job position</p>
+                    </div>
+                </div>
+                
+                {% if recruiter_jobs %}
+                <div class="space-y-1 text-left">
+                    <label class="text-[9px] font-mono text-slate-500 uppercase tracking-wider">Select Job Position to Audit:</label>
+                    <select onchange="window.location.href='?job_id=' + this.value" class="w-full bg-slate-950 border border-slate-900 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
+                        {% for job in recruiter_jobs %}
+                            <option value="{{ job.id }}" {% if job.id == selected_job.id %}selected{% endif %}>
+                                {{ job.title }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="flex items-center justify-between gap-6 bg-slate-950/20 border border-slate-900/40 p-5 rounded-2xl">
+                <!-- Pie Chart circle -->
+                <div class="flex items-center justify-center shrink-0 w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-slate-900 shadow-xl" style="{{ conic_style }}">
+                    <!-- Conic gradient pie chart -->
+                </div>
+
+                <!-- Legend status balances -->
+                <div class="flex-grow space-y-2 text-xs">
+                    <!-- Under Review -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span>
+                            <span>Under Review</span>
+                        </div>
+                        <span class="font-mono text-[10px] text-slate-350 font-bold bg-slate-900/70 border border-slate-800 px-2.0 py-0.5 rounded-md min-w-[20px] text-center">{{ under_review_count }}</span>
+                    </div>
+
+                    <!-- Shortlisted -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+                            <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 shrink-0"></span>
+                            <span>Shortlisted</span>
+                        </div>
+                        <span class="font-mono text-[10px] text-slate-350 font-bold bg-slate-900/70 border border-slate-800 px-2.0 py-0.5 rounded-md min-w-[20px] text-center">{{ shortlisted_count }}</span>
+                    </div>
+
+                    <!-- Interviewing -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+                            <span>Interviewing</span>
+                        </div>
+                        <span class="font-mono text-[10px] text-slate-350 font-bold bg-slate-900/70 border border-slate-800 px-2.0 py-0.5 rounded-md min-w-[20px] text-center">{{ interviewing_count }}</span>
+                    </div>
+
+                    <!-- Offers -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                            <span>Offers</span>
+                        </div>
+                        <span class="font-mono text-[10px] text-slate-350 font-bold bg-slate-900/70 border border-slate-800 px-2.0 py-0.5 rounded-md min-w-[20px] text-center">{{ offers_count }}</span>
+                    </div>
+
+                    <!-- Rejected -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
+                            <span class="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"></span>
+                            <span>Rejected</span>
+                        </div>
+                        <span class="font-mono text-[10px] text-slate-350 font-bold bg-slate-900/70 border border-slate-800 px-2.0 py-0.5 rounded-md min-w-[20px] text-center">{{ rejected_count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Top Candidates Comparison Chart (Horizontal bars) -->
+        <div class="bg-slate-900/10 border border-slate-900 rounded-3xl p-6 space-y-6">
+            <div>
+                <h3 class="text-sm font-black font-display text-white">Top Matching Candidates</h3>
+                <p class="text-[10px] text-slate-500">Leading applicant portfolios ordered by AI matching score</p>
+            </div>
+
+            <div class="space-y-4.5 bg-slate-950/40 p-5 rounded-2xl border border-slate-900/60">
+                {% if top_candidates %}
+                    {% for app in top_candidates %}
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between text-xs font-semibold text-slate-400">
+                            <span class="text-slate-200">{{ app.trainee.user.get_full_name|default:app.trainee.user.username }}</span>
+                            <span class="text-[10px] text-slate-500">Job: <span class="font-sans font-medium text-slate-300">{{ app.job.title }}</span></span>
+                            <span class="font-mono text-indigo-400 font-bold bg-indigo-500/5 border border-indigo-500/10 px-1.5 py-0.5 rounded">★ {{ app.screener_score }}%</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-900">
+                            <!-- Horizontal bar -->
+                            <div class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: {{ app.screener_score }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-8 space-y-2">
+                        <span class="text-2xl text-slate-600 block">🏆</span>
+                        <p class="text-xs text-slate-500">No applicant scores generated yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

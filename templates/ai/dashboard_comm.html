@@ -1,0 +1,111 @@
+<!-- templates/ai/dashboard_comm.html -->
+{% extends 'base.html' %}
+{% block title %}NextHire | Strategic AI Command Panel{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in max-w-6xl mx-auto">
+    <!-- Header info banner -->
+    <div class="border-b border-slate-900 pb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <span class="text-[10px] font-mono font-black uppercase tracking-wider text-emerald-400">Campus Strategic Intelligence Command</span>
+            <h1 class="text-2xl font-black mt-2 tracking-tight">AI Placement Strategic Ledger</h1>
+            <p class="text-xs text-slate-400 mt-1">Review aggregated trainee cohort resume benchmarks, technical communications audit indices, and top candidate cohorts ready for interviews.</p>
+        </div>
+        
+        {% if is_admin %}
+        <div class="flex items-center gap-3">
+            <a href="{% url 'ai:prompt_list' %}" class="px-3.5 py-2 rounded-xl bg-indigo-650 hover:bg-indigo-750 font-bold text-xs text-white transition-all shadow-lg shadow-indigo-600/10 cursor-pointer">
+                Administrate Prompts
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Phase 6 Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 text-xs font-semibold">
+        <!-- Metric 1: Total Runs -->
+        <div class="p-5 border border-slate-900 bg-slate-950 rounded-2xl space-y-2">
+            <span class="text-[9.5px] font-mono uppercase text-slate-500 block">ATS Scans Completed</span>
+            <h1 class="text-3xl font-black font-mono text-white">{{ total_analyses }}</h1>
+            <p class="text-[10.5px] text-slate-450">Resume files evaluated.</p>
+        </div>
+
+        <!-- Metric 2: Total Mock Flights -->
+        <div class="p-5 border border-slate-900 bg-slate-950 rounded-2xl space-y-2">
+            <span class="text-[9.5px] font-mono uppercase text-slate-500 block">Mock Interviews Run</span>
+            <h1 class="text-3xl font-black font-mono text-white">{{ total_interviews }}</h1>
+            <p class="text-[10.5px] text-slate-450">Individual trainee sessions stored.</p>
+        </div>
+
+        <!-- Metric 3: Avg CV Index -->
+        <div class="p-5 border border-slate-900 bg-slate-950 rounded-2xl space-y-2">
+            <span class="text-[9.5px] font-mono uppercase text-slate-500 block">Average Resume ATS Score</span>
+            <h1 class="text-3xl font-black font-mono text-indigo-400">{{ avg_resume_score }}%</h1>
+            <p class="text-[10.5px] text-slate-450">Profile formatting threshold.</p>
+        </div>
+
+        <!-- Metric 4: Avg Interview Articulations -->
+        <div class="p-5 border border-slate-900 bg-slate-950 rounded-2xl space-y-2">
+            <span class="text-[9.5px] font-mono uppercase text-slate-500 block">Average Dialogue Score</span>
+            <h1 class="text-3xl font-black font-mono text-emerald-400">{{ avg_interview_score }}%</h1>
+            <p class="text-[10.5px] text-slate-450">Language and technical synthesis.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Top performing trainees table list -->
+        <div class="p-6 border border-slate-900 bg-slate-950 rounded-2xl space-y-4 lg:col-span-8">
+            <h3 class="text-sm font-extrabold flex items-center gap-2 border-b border-slate-900 pb-3">
+                <span class="text-indigo-400"></span> Ready for Interview Candidates Bench (Top 5)
+            </h3>
+
+            <div class="overflow-x-auto text-xs font-semibold">
+                <table class="w-full text-left min-w-[500px]">
+                    <thead>
+                        <tr class="border-b border-slate-905 text-slate-500 font-mono text-[9px] uppercase tracking-wider py-1">
+                            <th class="py-2.5">STUDENT NAME</th>
+                            <th class="py-2.5">Batch Code</th>
+                            <th class="py-2.5">CGPA</th>
+                            <th class="py-2.5">DISCIPLINE</th>
+                            <th class="py-2.5 text-right">PLACMENT ELIGIBILITY</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-900">
+                        {% for trainee in top_candidates %}
+                        <tr class="hover:bg-slate-905/10 transition-colors">
+                            <td class="py-3 text-white font-black">{{ trainee.user.get_full_name|default:trainee.user.username }}</td>
+                            <td class="py-3 font-mono text-slate-400 text-[11px]">{{ trainee.batch_code }}</td>
+                            <td class="py-3 font-mono font-bold text-slate-300">GPA: {{ trainee.cgpa }}</td>
+                            <td class="py-3 text-slate-450">{{ trainee.branch }}</td>
+                            <td class="py-3 text-right font-mono font-black font-semibold text-indigo-405">
+                                {{ trainee.placement_readiness_score }}%
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="py-10 text-center text-slate-505 italic">
+                                No candidate profiles cataloged yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- System constraints info on the right -->
+        <ol class="p-6 border border-slate-900 bg-slate-950 rounded-2xl space-y-4 lg:col-span-4 list-none m-0">
+            <h4 class="text-xs font-black uppercase text-slate-500 border-b border-slate-900 pb-3 block">Security Credentials Configuration</h4>
+            <div class="space-y-4 text-xs font-semibold text-slate-400 leading-relaxed">
+                <p>Strategic dashboard checks are limited to recruit and campus manager accounts. Student candidate logs are strictly insulated per tenant scopes.</p>
+                
+                <div class="p-3.5 bg-slate-900/60 border border-slate-850 rounded-xl space-y-1 text-[11px]">
+                    <span class="text-white block font-black">ACTIVE AGENT SYSTEM</span>
+                    <p class="font-mono text-[10px] text-slate-500">Model: Gemini Flash v2.5</p>
+                    <p class="font-mono text-[10px] text-slate-500">Security Claims: RBAC Verified</p>
+                </div>
+            </div>
+        </ol>
+    </div>
+</div>
+{% endblock %}

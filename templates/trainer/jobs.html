@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Jobs Board | Placement Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-8 animate-fade-in text-left">
+    <!-- Header banner -->
+    <div class="bg-slate-900/40 p-6 rounded-3xl border border-slate-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div class="space-y-1">
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-indigo-400">Trainer Workspace</span>
+            <h1 class="text-2xl font-black font-display text-white">Active Positions Board</h1>
+            <p class="text-xs text-slate-400">Review recruiter openings, filter details, and recommend qualified candidates.</p>
+        </div>
+    </div>
+
+    <!-- Search / filter bar -->
+    <div class="bg-slate-900/20 border border-slate-900 rounded-3xl p-5">
+        <form method="get" class="flex flex-col md:flex-row gap-4 items-stretch">
+            <div class="flex-1 relative">
+                <input type="text" name="q" value="{{ search_q }}" placeholder="Search positions by title, recruiter, or key terms..." 
+                       class="w-full bg-slate-950 border border-slate-900 rounded-2xl px-5 py-3 text-xs text-slate-200 placeholder-slate-650 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all">
+            </div>
+            <button type="submit" class="px-6 py-3 bg-indigo-650 hover:bg-indigo-600 text-white font-bold text-xs rounded-2xl cursor-pointer transition-all shadow-lg hover:shadow-indigo-600/15">
+                Apply Search
+            </button>
+            {% if search_q %}
+                <a href="{% url 'trainer:jobs' %}" class="px-5 py-3 border border-slate-900 hover:border-slate-800 bg-slate-900/20 text-slate-400 hover:text-white font-bold text-xs rounded-2xl cursor-pointer transition-all flex items-center justify-center">
+                    Reset Filter
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Jobs Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for job in jobs %}
+            <div class="bg-slate-900/20 border border-slate-900 hover:border-slate-850 rounded-3xl p-6 flex flex-col justify-between gap-6 transition-all duration-300 relative group">
+                <div class="space-y-4">
+                    <!-- Top section badge/title -->
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="space-y-1">
+                            <span class="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded uppercase bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                                {{ job.get_job_type_display }}
+                            </span>
+                            <h3 class="text-lg font-bold text-white font-sans mt-1.5">{{ job.title }}</h3>
+                            <p class="text-xs text-indigo-400 font-semibold">{{ job.recruiter.company_name }}</p>
+                        </div>
+                        <span class="text-xs font-black text-emerald-450 bg-emerald-500/5 border border-emerald-500/10 px-3.5 py-1 rounded-xl shrink-0">
+                            {{ job.salary_package }}
+                        </span>
+                    </div>
+
+                    <!-- Job parameters attributes -->
+                    <div class="flex flex-wrap items-center gap-4 text-xs text-slate-450 border-t border-slate-900/50 pt-3">
+                        <span class="flex items-center gap-1 text-[11px]"><strong class="text-slate-350">CGPA:</strong> {{ job.min_cgpa_required }}+</span>
+                        <span class="flex items-center gap-1 text-[11px]"><strong class="text-slate-350">Exp:</strong> {{ job.experience_required }}+ yrs</span>
+                        <span class="flex items-center gap-1 text-[11px]"><strong class="text-slate-350">Location:</strong> {{ job.location }}</span>
+                        <span class="flex items-center gap-1 text-[11px]"><strong class="text-slate-350">Deadline:</strong> {{ job.application_deadline|date:"M d, Y" }}</span>
+                    </div>
+
+                    <!-- Required Skills -->
+                    {% if job.skills_required %}
+                        <div class="space-y-1.5 pt-1.5">
+                            <h4 class="text-[10px] font-mono text-slate-500 uppercase tracking-wider font-bold">Required Skills:</h4>
+                            <div class="flex flex-wrap gap-1">
+                                {% for skill in job.skills_required %}
+                                    <span class="text-[9px] font-mono bg-slate-950/80 border border-slate-900 px-2 py-0.5 rounded text-slate-400">{{ skill }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Required Courses -->
+                    {% if job.required_courses.exists %}
+                        <div class="space-y-1.5 pt-1.5">
+                            <h4 class="text-[10px] font-mono text-slate-500 uppercase tracking-wider font-bold">Enrolled Target Courses:</h4>
+                            <div class="flex flex-wrap gap-1">
+                                {% for course in job.required_courses.all %}
+                                    <span class="text-[9px] font-mono bg-indigo-950/20 border border-indigo-900/40 px-2 py-0.5 rounded text-indigo-400">{{ course.name }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Recommend Form Section -->
+                <div class="bg-slate-950/60 border border-slate-900/80 p-4 rounded-2xl space-y-3 mt-2 text-left">
+                    <h4 class="text-xs font-bold text-slate-350 uppercase tracking-wider">Recommend Approved Student</h4>
+                    <form method="post" action="{% url 'trainer:recommend' %}" class="space-y-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="job_id" value="{{ job.id }}">
+                        
+                        <select name="trainee_id" required 
+                                class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-300 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all">
+                            <option value="" disabled selected>Select eligible trainee...</option>
+                            {% for trainee in job.eligible_students %}
+                                <option value="{{ trainee.id }}">
+                                    {{ trainee.user.get_full_name|default:trainee.user.email }} (Batch: {{ trainee.batch_code|default:"N/A" }} &bull; CGPA: {{ trainee.cgpa }})
+                                </option>
+                            {% empty %}
+                                <option value="" disabled>No eligible approved candidates</option>
+                            {% endfor %}
+                        </select>
+
+                        <input type="text" name="comments" placeholder="Comments (e.g. Completed Java module excellently)..." required
+                               class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-300 placeholder-slate-650 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all">
+
+                        <button type="submit" 
+                                {% if not job.eligible_students %}disabled class="w-full py-2 bg-slate-900 border border-slate-800 text-slate-500 text-[11px] font-bold rounded-lg cursor-not-allowed select-none"{% else %}class="w-full py-2 bg-indigo-650 hover:bg-indigo-600 text-white text-[11px] font-bold rounded-lg transition-all cursor-pointer shadow-lg hover:shadow-indigo-600/10"{% endif %}>
+                            Recommend Student
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-span-full bg-slate-900/10 border border-slate-900/80 py-16 px-6 text-center rounded-3xl space-y-4">
+                <span class="text-4xl">💼</span>
+                <h3 class="text-lg font-black font-display text-white">No active job openings found</h3>
+                <p class="text-xs sm:text-sm text-slate-550 max-w-md mx-auto">
+                    There are currently no active job vacancies posted by our corporate recruiter partners matching your filters.
+                </p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
